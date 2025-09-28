@@ -63,18 +63,33 @@ def screener_to_dataframe(items: List[Dict]) -> pd.DataFrame:
 def flow_to_dataframe(items: List[Dict]) -> pd.DataFrame:
     if not items:
         return pd.DataFrame(columns=[
-            "publicFigureFlow", "publicFigureAvgAbsFlow", "publicFigureWallets",
-            "topPnlFlow", "topPnlAvgAbsFlow", "topPnlWallets",
-            "whaleFlow", "whaleAvgAbsFlow", "whaleWallets",
-            "smartTraderFlow", "smartTraderAvgAbsFlow", "smartTraderWallets",
-            "exchangeFlow", "exchangeAvgAbsFlow", "exchangeWallets",
-            "freshWalletsFlow", "freshWalletsAvgAbsFlow", "freshWalletsWallets"
-        ])
+            "public_figure_net_flow_usd",
+            "public_figure_avg_flow_usd",
+            "public_figure_wallet_count",
+            "top_pnl_net_flow_usd",
+            "top_pnl_avg_flow_usd",
+            "top_pnl_wallet_count",
+            "whale_net_flow_usd",
+            "whale_avg_flow_usd",
+            "whale_wallet_count",
+            "smart_trader_net_flow_usd",
+            "smart_trader_avg_flow_usd",
+            "smart_trader_wallet_count",
+            "exchange_net_flow_usd",
+            "exchange_avg_flow_usd",
+            "exchange_wallet_count",
+            "fresh_wallets_net_flow_usd",
+            "fresh_wallets_avg_flow_usd",
+            "fresh_wallets_wallet_count"])
     df = pd.DataFrame(items)
-    for col in [
-        "publicFigureAvgAbsFlow", "topPnlAvgAbsFlow", "whaleAvgAbsFlow",
-        "smartTraderAvgAbsFlow", "exchangeAvgAbsFlow", "freshWalletsAvgAbsFlow"
-    ]:
-        if col in df.columns:
-            df[col] = pd.to_numeric(df[col], errors="coerce")
+    return df
+
+def holders_to_dataframe(data: List[Dict]) -> pd.DataFrame:
+    if not data:
+        return pd.DataFrame(columns=[
+            "address", "address_label", "token_amount",
+            "total_outflow", "total_inflow", "balance_change_24h",
+            "balance_change_7d", "balance_change_30d", "ownership_percentage",
+            "value_usd"])
+    df = pd.DataFrame(data)
     return df

@@ -6,7 +6,7 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-API_BASE = os.getenv("NANSEN_BASE_URL", "https://api.nansen.ai/api/beta")
+API_BASE = os.getenv("NANSEN_BASE_URL", "https://api.nansen.ai/api/v1")
 API_KEY = os.getenv("apiKey")
 CANDLES_PATH = os.getenv("NANSEN_CANDLES_PATH", "")
 
@@ -42,6 +42,24 @@ class NansenClient:
 
     def flow_intelligence(self, payload: Dict) -> List[Dict]:
         return self._post("/tgm/flow-intelligence", payload)
+
+    def tgm_holders(self, payload: Dict) -> List[Dict]: 
+        """
+        Fetch all pages of /tgm/holders, aggregating results into a single list.
+        """
+        all_results = []
+        page = payload["pagination"]["page"]
+        per_page = payload["pagination"]["per_page"]
+        while True:
+            payload["pagination"]["page"] = page
+            results = self._post("/tgm/holders", payload)
+            if not results:
+                break
+            all_results.extend(results)
+            if len(results) < per_page:
+                break  # Last page reached
+            page += 1
+        return all_results 
 
     def token_candles(self, payload: Dict, path: Optional[str] = None) -> List[Dict]:
         """
