@@ -8,10 +8,14 @@ import pandas as pd
 import numpy as np
 import plotly.express as px
 from components.holders import render_holder_distribution, render_inflow_outflow_bar_chart
+from components.pnl_leaderboard import render_holder_pnl_bubble_chart
 
-DEFAULT_PAYLOAD = {
-    "chain": "solana",
-    "token_address": "2zMMhcVQEXDtdE6vsFS7S7D5oUodfJHE8vd1gnBouauv",
+DEFAULT_TOKEN_ADDRESS = "2zMMhcVQEXDtdE6vsFS7S7D5oUodfJHE8vd1gnBouauv"
+DEFAULT_CHAIN = "solana"
+
+HOLDERS_DEFAULT_PAYLOAD = {
+    "chain": DEFAULT_CHAIN,
+    "token_address": DEFAULT_TOKEN_ADDRESS,
     "aggregate_by_entity": True,
     "label_type": "all_holders",
     "pagination": {
@@ -42,6 +46,33 @@ DEFAULT_PAYLOAD = {
         "field": "ownership_percentage",
         "direction": "DESC"
         }
+    ]
+}
+
+PnL_LEADERBOARD_DEFAULT_PAYLOAD = {
+    "chain": DEFAULT_CHAIN,
+    "token_address": DEFAULT_TOKEN_ADDRESS,
+    "date": {
+        "from": "2025-07-14",
+        "to": "2025-07-15"
+    },
+    "pagination": {
+    "page": 1,
+    "per_page": 10
+    },
+    "filters": {
+    "holding_usd": {
+        "min": 1000
+    },
+    "pnl_usd_realised": {
+        "min": 1000
+    }
+    },
+    "order_by": [
+    {
+        "field": "pnl_usd_realised",
+        "direction": "ASC"
+    }
     ]
 }
 
@@ -85,24 +116,24 @@ def main():
         ],
         index=[
             'arbitrum','avalanche','base','berachain','blast','bnb','ethereum','goat','hyperevm','iotaevm','linea','mantle','optimism','polygon','ronin','sei','scroll','sonic','unichain','zksync','bitcoin','solana','ton','tron','starknet'
-        ].index(DEFAULT_PAYLOAD.get('chain ', 'solana'))
+        ].index(HOLDERS_DEFAULT_PAYLOAD.get('chain ', 'solana'))
     )
-    token_address = st.text_input('Token Address', value=DEFAULT_PAYLOAD.get('token_address', ''))
-    aggregate_by_entity = st.selectbox('Aggregate by Entity', [True, False], index=0 if DEFAULT_PAYLOAD.get('aggregate_by_entity', True) else 1)
+    token_address = st.text_input('Token Address', value=HOLDERS_DEFAULT_PAYLOAD.get('token_address', ''))
+    aggregate_by_entity = st.selectbox('Aggregate by Entity', [True, False], index=0 if HOLDERS_DEFAULT_PAYLOAD.get('aggregate_by_entity', True) else 1)
     # label_type = st.selectbox('Label Type', ['whale','public_figure','smart_money','all_holders','exchange'], index=[
     #     'whale','public_figure','smart_money','all_holders','exchange'
     # ].index(DEFAULT_PAYLOAD.get('label_type', 'all_holders')))
 
     # Update payload with widget values
-    payload = DEFAULT_PAYLOAD.copy()
-    payload['chain'] = chain
-    payload['token_address'] = token_address
-    payload['aggregate_by_entity'] = aggregate_by_entity
+    holders_payload = HOLDERS_DEFAULT_PAYLOAD.copy()
+    holders_payload['chain'] = chain
+    holders_payload['token_address'] = token_address
+    holders_payload['aggregate_by_entity'] = aggregate_by_entity
     # payload['label_type'] = label_type 
 
-    render_holder_distribution(payload)
-    render_inflow_outflow_bar_chart(payload)
-    
+    # render_holder_distribution(holders_payload)
+    # render_inflow_outflow_bar_chart(holders_payload)
+    render_holder_pnl_bubble_chart(PnL_LEADERBOARD_DEFAULT_PAYLOAD)
 
     
 

@@ -62,6 +62,37 @@ class NansenClient:
             page += 1
         payload["pagination"]["page"] = 1  # Reset page to original
         return all_results 
+    
+    def tgm_pnl_leaderboard(self, payload: Dict) -> List[Dict]:
+        """
+        Fetch all pages of /tgm/pnl-leaderboard, aggregating results into a single list.
+        """
+        all_results = []
+        page = payload["pagination"]["page"]
+        per_page = payload["pagination"]["per_page"]
+        while True:
+            payload["pagination"]["page"] = page
+            results = self._post("/tgm/pnl-leaderboard", payload)
+            if not results:
+                break
+            all_results.extend(results)
+            if len(results) < per_page:
+                break  # Last page reached
+            page += 1
+        payload["pagination"]["page"] = 1  # Reset page to original
+        return all_results
+    
+    def pfl_address_pnl_summary(self, payloads: List[Dict]) -> List[Dict]:
+        """Fetch PnL summary for a specific address."""
+        all_results = []
+        for payload in payloads:
+            data = self._post("/profiler/address/pnl-summary", payload)
+            print("summary data: ", data)
+            # add address to each item in data
+            data['address'] = payload['address']
+            all_results.append(data)
+        return all_results
+    
 
     def token_candles(self, payload: Dict, path: Optional[str] = None) -> List[Dict]:
         """

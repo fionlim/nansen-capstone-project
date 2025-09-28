@@ -93,3 +93,50 @@ def holders_to_dataframe(data: List[Dict]) -> pd.DataFrame:
             "value_usd"])
     df = pd.DataFrame(data)
     return df
+
+def pnl_leaderboard_to_dataframe(data: List[Dict]) -> pd.DataFrame:
+    if not data:
+        return pd.DataFrame(columns=[
+            "trader_address",
+            "trader_address_label",
+            "price_usd",
+            "pnl_usd_realised",
+            "pnl_usd_unrealised",
+            "holding_amount",
+            "holding_usd",
+            "max_balance_held",
+            "max_balance_held_usd",
+            "still_holding_balance_ratio",
+            "netflow_amount_usd",
+            "netflow_amount",
+            "roi_percent_total",
+            "roi_percent_realised",
+            "roi_percent_unrealised",
+            "pnl_usd_total",
+            "nof_trades"])
+    df = pd.DataFrame(data)
+    return df
+
+def pnl_summary_to_dataframe(data: List[Dict]) -> pd.DataFrame:
+    """
+    For now just get the 
+    traded_token_count, traded_times, realised_pnl_usd, realized_pnl_percent, and win_rate of the wallet
+    """
+    if not data:
+        return pd.DataFrame(columns=[
+            "address",
+            "traded_token_count",
+            "traded_times",
+            "realised_pnl_usd",
+            "realized_pnl_percent",
+            "win_rate"])
+    data_new = {k: [v] for k, v in data if k in [
+        "address",
+        "traded_token_count",
+        "traded_times",
+        "realised_pnl_usd",
+        "realized_pnl_percent",
+        "win_rate"
+    ]}
+    df = pd.DataFrame(data_new)
+    return df
