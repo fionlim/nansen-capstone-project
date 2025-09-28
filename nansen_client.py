@@ -52,6 +52,7 @@ class NansenClient:
         per_page = payload["pagination"]["per_page"]
         while True:
             payload["pagination"]["page"] = page
+            print("page: ", page)
             results = self._post("/tgm/holders", payload)
             if not results:
                 break
@@ -59,6 +60,7 @@ class NansenClient:
             if len(results) < per_page:
                 break  # Last page reached
             page += 1
+        payload["pagination"]["page"] = 1  # Reset page to original
         return all_results 
 
     def token_candles(self, payload: Dict, path: Optional[str] = None) -> List[Dict]:

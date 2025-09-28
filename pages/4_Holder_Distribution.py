@@ -28,7 +28,7 @@ DEFAULT_PAYLOAD = {
         "Smart Trader"
             ],
         "ownership_percentage": {
-        "min": 0.01
+        "min": 0.00
         },
         "token_amount": {
         "min": 1000

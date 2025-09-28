@@ -4,17 +4,19 @@ import plotly.express as px
 from nansen_client import NansenClient
 from dataframes import holders_to_dataframe
 import pandas as pd
+import plotly.graph_objects as go
 
 def render_holder_distribution(payload: Dict):
     client = NansenClient()
 
     try:
-        holder_types = ['exchange', 'whale']
+        holder_types = ['smart_money', 'exchange', 'whale', 'public_figure']
         df = pd.DataFrame()
         for type in holder_types:
             payload['label_type'] = type
             items = client.tgm_holders(payload)
             holder_type_df = holders_to_dataframe(items)
+            print(type, len(holder_type_df))
             holder_type_df['holder_type'] = type
             if df.empty:
                 df = holder_type_df
@@ -45,7 +47,6 @@ def render_holder_distribution(payload: Dict):
                         title='Aggregated Total Inflow by Label')
             donut_cols[2].plotly_chart(fig3, use_container_width=True)
 
-            render_inflow_outflow_bar_chart(df)
     except Exception as e:
         st.error(f"Unexpected error: {e}" )
 
@@ -55,7 +56,7 @@ def render_inflow_outflow_bar_chart(payload: Dict):
     Fetches data using the same payload logic as render_holder_distribution.
     """
     client = NansenClient()
-    holder_types = ['exchange', 'whale']
+    holder_types = ['smart_money', 'exchange', 'whale', 'public_figure']
     df = pd.DataFrame()
     for type in holder_types:
         payload['label_type'] = type
@@ -69,12 +70,12 @@ def render_inflow_outflow_bar_chart(payload: Dict):
     if df.empty:
         st.warning("No holder distribution data returned for the selected filters.")
         return
-    import plotly.graph_objects as go
     agg = df.groupby('holder_type').agg({
         'total_inflow': 'sum',
         'total_outflow': 'sum'
     }).reset_index()
     agg['total_outflow'] = -agg['total_outflow']
+    print(agg['holder_type'].unique())
     fig = go.Figure()
     fig.add_trace(go.Bar(
         y=agg['holder_type'],
@@ -103,3 +104,4 @@ def render_inflow_outflow_bar_chart(payload: Dict):
         xaxis=dict(zeroline=True, zerolinewidth=2, zerolinecolor='gray')
     )
     st.plotly_chart(fig, use_container_width=True)
+
