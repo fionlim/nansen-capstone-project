@@ -1,5 +1,6 @@
 import os
-from typing import Dict, List, Optional
+import json
+from typing import Dict, List
 
 import requests
 from dotenv import load_dotenv
@@ -11,23 +12,24 @@ API_KEY = os.getenv("apiKey")
 CANDLES_PATH = os.getenv("NANSEN_CANDLES_PATH", "")
 
 class NansenClient:
-    def __init__(self, base_url: Optional[str] = None, api_key: Optional[str] = None):
-        self.base_url = base_url or API_BASE
+    def __init__(self):
+        self.base_url = API_BASE
         self.headers = {
-            "apiKey": api_key or API_KEY,
+            "apiKey": API_KEY,
             "Content-Type": "application/json",
         }
         if not self.headers["apiKey"]:
             raise ValueError("Missing apiKey. Add it to .env file.")
 
-    def _post(self, path: str, json_body: Dict, timeout: int = 45):
+    def _post(self, path: str, json_body: Dict):
         url = f"{self.base_url}{path}"
-        resp = requests.post(url, headers=self.headers, json=json_body, timeout=timeout)
-        resp.raise_for_status()
+        resp = requests.post(url, headers=self.headers, data=json.dumps(json_body))
         data = resp.json()
         if isinstance(data, dict) and "data" in data:
             return data["data"]
         if isinstance(data, list):
+            return data
+        if isinstance(data, dict):
             return data
         return []
 
@@ -42,6 +44,23 @@ class NansenClient:
 
     def flow_intelligence(self, payload: Dict) -> List[Dict]:
         return self._post("/tgm/flow-intelligence", payload)
+    
+    def dex_trades(self, payload: Dict) -> List[Dict]:
+        all_results = []
+        page = payload["pagination"]["page"]
+        per_page = payload["pagination"]["per_page"]
+        while True:
+            payload["pagination"]["page"] = page
+            print("page: ", page)
+            results = self._post("/tgm/dex-trades", payload)
+            if not results:
+                break
+            all_results.extend(results)
+            if len(results) < per_page:
+                break  # Last page reached
+            page += 1
+        payload["pagination"]["page"] = 1  # Reset page to original
+        return self._post("/tgm/dex-trades", payload)
 
     def tgm_holders(self, payload: Dict) -> List[Dict]: 
         """
@@ -85,26 +104,24 @@ class NansenClient:
     def pfl_address_pnl_summary(self, payloads: List[Dict]) -> List[Dict]:
         """Fetch PnL summary for a specific address."""
         all_results = []
+        # print("payloads:", payloads)
         for payload in payloads:
-            data = self._post("/profiler/address/pnl-summary", payload)
-            print("summary data: ", data)
-            # add address to each item in data
-            data['address'] = payload['address']
-            all_results.append(data)
+            # print("payload: ", payload)
+            try:
+                data = self._post("/profiler/address/pnl-summary", payload)
+                # print("summary data: ", data)
+                # add address to each item in data
+                if "error" in data:
+                    print(f"Error in response for address {payload['address']}: {data['error']}")
+                    continue
+                data['address'] = payload['address']
+                all_results.append(data)
+            except Exception as e:
+                print(f"Error fetching PnL summary for address {payload['address']}: {e}")
+                continue
+        # print("all results: ", all_results)
+        print("pnl-summary-size: ", len(all_results))
         return all_results
-    
-
-    def token_candles(self, payload: Dict, path: Optional[str] = None) -> List[Dict]:
-        """
-        Fetch OHLCV candles for a token. The endpoint path must be provided via env NANSEN_CANDLES_PATH
-        or explicitly via the path argument, to comply with documented endpoints.
-        """
-        candles_path = (path or CANDLES_PATH).strip()
-        if not candles_path:
-            raise ValueError("Missing NANSEN_CANDLES_PATH env or explicit path for candles endpoint.")
-        if not candles_path.startswith("/"):
-            candles_path = "/" + candles_path
-        return self._post(candles_path, payload)
 
     def token_flows(self, payload: Dict) -> List[Dict]:
         """Token God Mode flows (price history and flows)."""

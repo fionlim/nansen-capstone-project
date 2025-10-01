@@ -92,6 +92,19 @@ def holders_to_dataframe(data: List[Dict]) -> pd.DataFrame:
             "balance_change_7d", "balance_change_30d", "ownership_percentage",
             "value_usd"])
     df = pd.DataFrame(data)
+    def categorize_holder_type(address_label: str) -> str:
+        if '🏦' in address_label:
+            return "exchange"
+        address_label = address_label.lower()
+        if "🤓" in address_label or "smart trader" in address_label or "fund" in address_label:
+            return "smart_money"
+        elif "whale" in address_label:
+            return "whale"
+        elif "👤" in address_label:
+            return "public_figure"
+        else:
+            return "other"
+    df['holder_type'] = df['address_label'].apply(categorize_holder_type)
     return df
 
 def pnl_leaderboard_to_dataframe(data: List[Dict]) -> pd.DataFrame:
@@ -130,13 +143,36 @@ def pnl_summary_to_dataframe(data: List[Dict]) -> pd.DataFrame:
             "realised_pnl_usd",
             "realized_pnl_percent",
             "win_rate"])
-    data_new = {k: [v] for k, v in data if k in [
-        "address",
-        "traded_token_count",
-        "traded_times",
-        "realised_pnl_usd",
-        "realized_pnl_percent",
-        "win_rate"
-    ]}
+    data_new = []
+    for record in data:
+        record_new = {k: record.get(k, None) for k in [
+            "address",
+            "traded_token_count",
+            "traded_times",
+            "realised_pnl_usd",
+            "realized_pnl_percent",
+            "win_rate"
+        ]}
+        data_new.append(record_new)
     df = pd.DataFrame(data_new)
+    return df
+
+def dex_trades_to_dataframe(data: List[Dict]) -> pd.DataFrame: 
+    if not data:
+        return pd.DataFrame(columns=[
+            "block_timestamp"
+            "transaction_hash",
+            "trader_address",
+            "trader_address_label",
+            "action",
+            "token_address",
+            "token_name",
+            "token_amount",
+            "traded_token_address",
+            "traded_token_name",
+            "traded_token_amount",
+            "estimated_swap_price_usd",
+            "estimated_value_usd"
+        ])
+    df = pd.DataFrame(data)
     return df

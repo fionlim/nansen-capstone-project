@@ -6,16 +6,16 @@ from dataframes import pnl_leaderboard_to_dataframe, pnl_summary_to_dataframe
 import pandas as pd
 import plotly.graph_objects as go
 
-def render_holder_pnl_bubble_chart(payload: Dict):
+def render_pnl_leaderboard_bubble_chart(payload: Dict):
     client = NansenClient()
     try:
         leaderboard_items = client.tgm_pnl_leaderboard(payload)
-        leaderboard_df = pnl_leaderboard_to_dataframe(leaderboard_items)
-        print("leaderboard: ",leaderboard_df.head())
+        leaderboard_df = pnl_leaderboard_to_dataframe(leaderboard_items).head(100)  # Limit to top 100 for performance
+
         summary_payload = [{"chain": payload["chain"],
                            "address": trader_address,
                            "date": payload["date"]} for trader_address in leaderboard_df['trader_address'].tolist()]
-        print("summary payload", summary_payload)
+        
         summary_items = client.pfl_address_pnl_summary(summary_payload)
         summary_df = pnl_summary_to_dataframe(summary_items)
         df = pd.merge(leaderboard_df, summary_df, left_on='trader_address', right_on='address', how='left', suffixes=('', '_summary'))
@@ -31,6 +31,7 @@ def render_holder_pnl_bubble_chart(payload: Dict):
                 size='holding_usd', 
                 # color='holder_type',
                 hover_name='trader_address_label',
+                hover_data={'win_rate': True},
                 log_x=True,
                 log_y=True,
                 size_max=60,
