@@ -86,19 +86,19 @@ def render_netflow_podium(payload: Dict):
                     <div class="podium-bar silver">
                         <div class="medal" style="top: {silver_medal_top}px;">🥈</div>
                         <div class="bar" style="height:{podium_df.iloc[1]['bar_height']}px; background:#C0C0C0;"></div>
-                        <div class="podium-label">{podium_df.iloc[1]['token_symbol']}</div>
+                        <div class="podium-label">{podium_df.iloc[1]['token_symbol']} ({podium_df.iloc[1]['chain']})</div>
                         <div class="podium-value">${round(podium_df.iloc[1]['net_flow_24h_usd']):,} USD</div>
                     </div>
                     <div class="podium-bar gold">
                         <div class="medal" style="top: {gold_medal_top}px;">🥇</div>
                         <div class="bar" style="height:{podium_df.iloc[0]['bar_height']}px; background:#FFD700;"></div>
-                        <div class="podium-label">{podium_df.iloc[0]['token_symbol']}</div>
+                        <div class="podium-label">{podium_df.iloc[0]['token_symbol']} ({podium_df.iloc[0]['chain']})</div>
                         <div class="podium-value">${round(podium_df.iloc[0]['net_flow_24h_usd']):,} USD</div>
                     </div>
                     <div class="podium-bar bronze">
                         <div class="medal" style="top: {bronze_medal_top}px;">🥉</div>
                         <div class="bar" style="height:{podium_df.iloc[2]['bar_height']}px; background:#CD7F32;"></div>
-                        <div class="podium-label">{podium_df.iloc[2]['token_symbol']}</div>
+                        <div class="podium-label">{podium_df.iloc[2]['token_symbol']} ({podium_df.iloc[2]['chain']})</div>
                         <div class="podium-value">${round(podium_df.iloc[2]['net_flow_24h_usd']):,} USD</div>
                     </div>
                 </div>
@@ -113,13 +113,13 @@ def render_netflow_podium(payload: Dict):
                     <div class="podium-bar silver">
                         <div class="medal" style="top: {silver_medal_top}px;">🥈</div>
                         <div class="bar" style="height:{podium_df.iloc[1]['bar_height']}px; background:#C0C0C0;"></div>
-                        <div class="podium-label">{podium_df.iloc[1]['token_symbol']}</div>
+                        <div class="podium-label">{podium_df.iloc[1]['token_symbol']} ({podium_df.iloc[1]['chain']})</div>
                         <div class="podium-value">${round(podium_df.iloc[1]['net_flow_24h_usd']):,} USD</div>
                     </div>
                     <div class="podium-bar gold">
                         <div class="medal" style="top: {gold_medal_top}px;">🥇</div>
                         <div class="bar" style="height:{podium_df.iloc[0]['bar_height']}px; background:#FFD700;"></div>
-                        <div class="podium-label">{podium_df.iloc[0]['token_symbol']}</div>
+                        <div class="podium-label">{podium_df.iloc[0]['token_symbol']} ({podium_df.iloc[0]['chain']})</div>
                         <div class="podium-value">${round(podium_df.iloc[0]['net_flow_24h_usd']):,} USD</div>
                     </div>
                 </div>
@@ -134,7 +134,7 @@ def render_netflow_podium(payload: Dict):
                     <div class="podium-bar gold">
                         <div class="medal" style="top: {gold_medal_top}px;">🥇</div>
                         <div class="bar" style="height:{podium_df.iloc[0]['bar_height']}px; background:#FFD700;"></div>
-                        <div class="podium-label">{podium_df.iloc[0]['token_symbol']}</div>
+                        <div class="podium-label">{podium_df.iloc[0]['token_symbol']} ({podium_df.iloc[0]['chain']})</div>
                         <div class="podium-value">${round(podium_df.iloc[0]['net_flow_24h_usd']):,} USD</div>
                     </div>
                 </div>

@@ -29,7 +29,7 @@ def render_dex_trades_podium(payload: Dict):
         df = df[~df["token_bought_symbol"].isin(excluded_native_tokens)]
         podium_df = (
             df.groupby("token_bought_symbol")
-            .agg({"trade_value_usd": "sum"})
+            .agg({"trade_value_usd": "sum", "chain": "first"})
             .reset_index()
             .sort_values("trade_value_usd", ascending=False)
             .head(3)
@@ -100,19 +100,19 @@ def render_dex_trades_podium(payload: Dict):
                     <div class="podium-bar silver">
                         <div class="medal" style="top: {silver_medal_top}px;">🥈</div>
                         <div class="bar" style="height:{podium_df.iloc[1]['bar_height']}px; background:#C0C0C0;"></div>
-                        <div class="podium-label">{podium_df.iloc[1]['token_bought_symbol']}</div>
+                        <div class="podium-label">{podium_df.iloc[1]['token_bought_symbol']} ({podium_df.iloc[1]['chain']})</div>
                         <div class="podium-value">${round(podium_df.iloc[1]['trade_value_usd']):,} USD</div>
                     </div>
                     <div class="podium-bar gold">
                         <div class="medal" style="top: {gold_medal_top}px;">🥇</div>
                         <div class="bar" style="height:{podium_df.iloc[0]['bar_height']}px; background:#FFD700;"></div>
-                        <div class="podium-label">{podium_df.iloc[0]['token_bought_symbol']}</div>
+                        <div class="podium-label">{podium_df.iloc[0]['token_bought_symbol']} ({podium_df.iloc[0]['chain']})</div>
                         <div class="podium-value">${round(podium_df.iloc[0]['trade_value_usd']):,} USD</div>
                     </div>
                     <div class="podium-bar bronze">
                         <div class="medal" style="top: {bronze_medal_top}px;">🥉</div>
                         <div class="bar" style="height:{podium_df.iloc[2]['bar_height']}px; background:#CD7F32;"></div>
-                        <div class="podium-label">{podium_df.iloc[2]['token_bought_symbol']}</div>
+                        <div class="podium-label">{podium_df.iloc[2]['token_bought_symbol']} ({podium_df.iloc[2]['chain']})</div>
                         <div class="podium-value">${round(podium_df.iloc[2]['trade_value_usd']):,} USD</div>
                     </div>
                 </div>
@@ -127,13 +127,13 @@ def render_dex_trades_podium(payload: Dict):
                     <div class="podium-bar silver">
                         <div class="medal" style="top: {silver_medal_top}px;">🥈</div>
                         <div class="bar" style="height:{podium_df.iloc[1]['bar_height']}px; background:#C0C0C0;"></div>
-                        <div class="podium-label">{podium_df.iloc[1]['token_bought_symbol']}</div>
+                        <div class="podium-label">{podium_df.iloc[1]['token_bought_symbol']} ({podium_df.iloc[1]['chain']})</div>
                         <div class="podium-value">${round(podium_df.iloc[1]['trade_value_usd']):,} USD</div>
                     </div>
                     <div class="podium-bar gold">
                         <div class="medal" style="top: {gold_medal_top}px;">🥇</div>
                         <div class="bar" style="height:{podium_df.iloc[0]['bar_height']}px; background:#FFD700;"></div>
-                        <div class="podium-label">{podium_df.iloc[0]['token_bought_symbol']}</div>
+                        <div class="podium-label">{podium_df.iloc[0]['token_bought_symbol']} ({podium_df.iloc[0]['chain']})</div>
                         <div class="podium-value">${round(podium_df.iloc[0]['trade_value_usd']):,} USD</div>
                     </div>
                 </div>
@@ -148,7 +148,7 @@ def render_dex_trades_podium(payload: Dict):
                     <div class="podium-bar gold">
                         <div class="medal" style="top: {gold_medal_top}px;">🥇</div>
                         <div class="bar" style="height:{podium_df.iloc[0]['bar_height']}px; background:#FFD700;"></div>
-                        <div class="podium-label">{podium_df.iloc[0]['token_bought_symbol']}</div>
+                        <div class="podium-label">{podium_df.iloc[0]['token_bought_symbol']} ({podium_df.iloc[0]['chain']})</div>
                         <div class="podium-value">${round(podium_df.iloc[0]['trade_value_usd']):,} USD</div>
                     </div>
                 </div>
