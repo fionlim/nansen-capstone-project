@@ -8,8 +8,8 @@ from dataframes import net_flow_to_dataframe
 def render_netflow_podium(payload: Dict):
 
     try:
-        BASE_URL = st.secrets["nansen"]["base_url"]
-        headers = {"apiKey": st.secrets["nansen"]["apiKey"],
+        BASE_URL = st.secrets["NANSEN_BASE_URL"]
+        headers = {"apiKey": st.secrets["apiKey"],
             "Content-Type": "application/json"}
         response = requests.post(f"{BASE_URL}/smart-money/netflow", headers=headers, data=json.dumps(payload))
         items = response.json().get("data", [])
