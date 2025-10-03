@@ -1,43 +1,28 @@
-import json
-import requests
 import streamlit as st
-from dataframes import dex_trades_to_dataframe
 from typing import Dict
+from nansen_client import NansenClient
+from dataframes import net_flow_to_dataframe
 
-def render_dex_trades_podium(payload: Dict):
+
+def render_netflow_podium(payload: Dict):
+
     try:
-        BASE_URL = st.secrets["NANSEN_BASE_URL"]
-        headers = {"apiKey": st.secrets["apiKey"],
-            "Content-Type": "application/json"}
-        response = requests.post(f"{BASE_URL}/smart-money/dex-trades", headers=headers, data=json.dumps(payload))
-        items = response.json().get("data", [])
-        df = dex_trades_to_dataframe(items)
+        client = NansenClient()
+        items = client.smart_money_netflow(payload)
+        df = net_flow_to_dataframe(items)
         if df.empty:
-            st.warning("No DEX trades data returned for the selected filters.")
+            st.warning("No net flow data returned for the selected filters.")
             return
-        excluded_stablecoins = {"USDT", "USDC", "DAI", 
-                                "DUSD", "TUSD", "BUSD", 
-                                "FRAX", "USDP", "GUSD"}
-        excluded_native_tokens = {"ARB", "AVAX", "ETH", 
-                                  "BERA", "BLAST", "BNB", 
-                                  "GOAT", "HYPER", "IOTA",
-                                  "MNT", "MATIC", "RON", 
-                                  "SEI", "SONIC", "UNI", 
-                                  "SOL", "BASE", "WETH", 
-                                  "WBTC", "WSOL", "WEETH"}
-        df = df[~df["token_bought_symbol"].isin(excluded_stablecoins)]        
-        df = df[~df["token_bought_symbol"].isin(excluded_native_tokens)]
+
+        df_positive = df[df["net_flow_24h_usd"] > 0]
         podium_df = (
-            df.groupby("token_bought_symbol")
-            .agg({"trade_value_usd": "sum", "chain": "first"})
-            .reset_index()
-            .sort_values("trade_value_usd", ascending=False)
+            df_positive.sort_values("net_flow_24h_usd", ascending=False)
             .head(3)
         )
-        
-        max_height = podium_df["trade_value_usd"].max()
-        podium_df["bar_height"] = (podium_df["trade_value_usd"] / max_height * 150).astype(int)
 
+        max_height = podium_df["net_flow_24h_usd"].max() if not podium_df.empty else 1
+        podium_df["bar_height"] = (podium_df["net_flow_24h_usd"] / max_height * 150).astype(int)
+        
         gold_height = podium_df.iloc[0]['bar_height']
         gold_medal_top = -20 if gold_height >= 20 else -45
 
@@ -67,10 +52,9 @@ def render_dex_trades_podium(payload: Dict):
                 }
                 .podium-bar .medal {
                     position: absolute;
-                    top: -20px;
                     left: 50%;
                     transform: translateX(-50%);
-                    font-size: 40px;
+                    font-size: 40px; 
                 }
                 .bar {
                     width: 60px;
@@ -87,8 +71,6 @@ def render_dex_trades_podium(payload: Dict):
             </style>
             """, unsafe_allow_html=True
         )
-
-
         if podium_df.empty:
             st.warning("No tokens available for podium display.")
             return
@@ -100,20 +82,20 @@ def render_dex_trades_podium(payload: Dict):
                     <div class="podium-bar silver">
                         <div class="medal" style="top: {silver_medal_top}px;">🥈</div>
                         <div class="bar" style="height:{podium_df.iloc[1]['bar_height']}px; background:#C0C0C0;"></div>
-                        <div class="podium-label">{podium_df.iloc[1]['token_bought_symbol']} ({podium_df.iloc[1]['chain']})</div>
-                        <div class="podium-value">${round(podium_df.iloc[1]['trade_value_usd']):,} USD</div>
+                        <div class="podium-label">{podium_df.iloc[1]['token_symbol']} ({podium_df.iloc[1]['chain']})</div>
+                        <div class="podium-value">${round(podium_df.iloc[1]['net_flow_24h_usd']):,} USD</div>
                     </div>
                     <div class="podium-bar gold">
                         <div class="medal" style="top: {gold_medal_top}px;">🥇</div>
                         <div class="bar" style="height:{podium_df.iloc[0]['bar_height']}px; background:#FFD700;"></div>
-                        <div class="podium-label">{podium_df.iloc[0]['token_bought_symbol']} ({podium_df.iloc[0]['chain']})</div>
-                        <div class="podium-value">${round(podium_df.iloc[0]['trade_value_usd']):,} USD</div>
+                        <div class="podium-label">{podium_df.iloc[0]['token_symbol']} ({podium_df.iloc[0]['chain']})</div>
+                        <div class="podium-value">${round(podium_df.iloc[0]['net_flow_24h_usd']):,} USD</div>
                     </div>
                     <div class="podium-bar bronze">
                         <div class="medal" style="top: {bronze_medal_top}px;">🥉</div>
                         <div class="bar" style="height:{podium_df.iloc[2]['bar_height']}px; background:#CD7F32;"></div>
-                        <div class="podium-label">{podium_df.iloc[2]['token_bought_symbol']} ({podium_df.iloc[2]['chain']})</div>
-                        <div class="podium-value">${round(podium_df.iloc[2]['trade_value_usd']):,} USD</div>
+                        <div class="podium-label">{podium_df.iloc[2]['token_symbol']} ({podium_df.iloc[2]['chain']})</div>
+                        <div class="podium-value">${round(podium_df.iloc[2]['net_flow_24h_usd']):,} USD</div>
                     </div>
                 </div>
                 """,
@@ -127,14 +109,14 @@ def render_dex_trades_podium(payload: Dict):
                     <div class="podium-bar silver">
                         <div class="medal" style="top: {silver_medal_top}px;">🥈</div>
                         <div class="bar" style="height:{podium_df.iloc[1]['bar_height']}px; background:#C0C0C0;"></div>
-                        <div class="podium-label">{podium_df.iloc[1]['token_bought_symbol']} ({podium_df.iloc[1]['chain']})</div>
-                        <div class="podium-value">${round(podium_df.iloc[1]['trade_value_usd']):,} USD</div>
+                        <div class="podium-label">{podium_df.iloc[1]['token_symbol']} ({podium_df.iloc[1]['chain']})</div>
+                        <div class="podium-value">${round(podium_df.iloc[1]['net_flow_24h_usd']):,} USD</div>
                     </div>
                     <div class="podium-bar gold">
                         <div class="medal" style="top: {gold_medal_top}px;">🥇</div>
                         <div class="bar" style="height:{podium_df.iloc[0]['bar_height']}px; background:#FFD700;"></div>
-                        <div class="podium-label">{podium_df.iloc[0]['token_bought_symbol']} ({podium_df.iloc[0]['chain']})</div>
-                        <div class="podium-value">${round(podium_df.iloc[0]['trade_value_usd']):,} USD</div>
+                        <div class="podium-label">{podium_df.iloc[0]['token_symbol']} ({podium_df.iloc[0]['chain']})</div>
+                        <div class="podium-value">${round(podium_df.iloc[0]['net_flow_24h_usd']):,} USD</div>
                     </div>
                 </div>
                 """,
@@ -148,8 +130,8 @@ def render_dex_trades_podium(payload: Dict):
                     <div class="podium-bar gold">
                         <div class="medal" style="top: {gold_medal_top}px;">🥇</div>
                         <div class="bar" style="height:{podium_df.iloc[0]['bar_height']}px; background:#FFD700;"></div>
-                        <div class="podium-label">{podium_df.iloc[0]['token_bought_symbol']} ({podium_df.iloc[0]['chain']})</div>
-                        <div class="podium-value">${round(podium_df.iloc[0]['trade_value_usd']):,} USD</div>
+                        <div class="podium-label">{podium_df.iloc[0]['token_symbol']} ({podium_df.iloc[0]['chain']})</div>
+                        <div class="podium-value">${round(podium_df.iloc[0]['net_flow_24h_usd']):,} USD</div>
                     </div>
                 </div>
                 """,

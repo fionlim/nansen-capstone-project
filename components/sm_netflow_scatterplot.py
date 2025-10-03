@@ -1,7 +1,6 @@
-import json
-import requests
-from typing import Dict
 import streamlit as st
+from typing import Dict
+from nansen_client import NansenClient
 from dataframes import net_flow_to_dataframe
 import plotly.graph_objects as go
 import numpy as np
@@ -9,11 +8,8 @@ import numpy as np
 def render_netflow_scatterplot(payload: Dict):
 
     try:
-        BASE_URL = st.secrets['NANSEN_BASE_URL']
-        headers = {"apiKey": st.secrets['apiKey'],
-            "Content-Type": "application/json"}
-        response = requests.post(f"{BASE_URL}/smart-money/netflow", headers=headers, data=json.dumps(payload))
-        items = response.json().get("data", [])
+        client = NansenClient()
+        items = client.smart_money_netflow(payload, fetch_all=True, n=0)
         df = net_flow_to_dataframe(items)
         if df.empty:
             st.warning("No net flow data returned for the selected filters.")
