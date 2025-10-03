@@ -1,13 +1,10 @@
 #!/usr/bin/env python3
-
-import os
 import json
 import streamlit as st
-from dotenv import load_dotenv
 
-from components.Netflow_Scatterplot import render_netflow_scatterplot
-from components.Trade_Value_Podium import render_dex_trades_podium
-from components.Netflow_Podium import render_netflow_podium
+from components.sm_netflow_scatterplot import render_netflow_scatterplot
+from components.sm_trade_value_podium import render_dex_trades_podium
+from components.sm_netflow_podium import render_netflow_podium
 
 
 def main():
@@ -43,7 +40,8 @@ def main():
     """)
     
     st.write(f"Hello, {st.user.name}!")
-    st.markdown("<h2 style='text-align: center;'>What are Smart Money Buying?</h2>", unsafe_allow_html=True)
+
+    st.header("What are Smart Money Buying?")
     col_1, col_2 = st.columns(2)
     with col_1:
         all_chains = ["ethereum", "solana", "base", 
@@ -99,9 +97,7 @@ def main():
                 }
             ]
         }
-
-        st.markdown("<h4 style='text-align: center;'>Top 3 Tokens by DEX Trading Value (24h)</h4>", unsafe_allow_html=True)
-
+        st.subheader("Top 3 Tokens by DEX Trading Value (24h)")
         value_payload = json.loads(json.dumps(DEX_DEFAULT_PAYLOAD))
         if ["all"] in selected_chains or set(selected_chains) == set(all_chains):
             value_payload["chains"] = ["all"]
@@ -136,7 +132,7 @@ def main():
                 }
             ]
         }
-        st.markdown("<h4 style='text-align: center;'>Top 3 Tokens by Netflow (24h)</h4>", unsafe_allow_html=True)
+        st.subheader("Top 3 Tokens by Netflow (24h)")
 
         netflow_payload = json.loads(json.dumps(NETFLOW_DEFAULT_PAYLOAD))
         if ["all"] in selected_chains or set(selected_chains) == set(all_chains):
@@ -169,8 +165,8 @@ def main():
         },
     }
     st.divider()
-    st.markdown("<h4 style='text-align: center;'>Token Netflow Distribution (Netflow > $5,000)</h4>", unsafe_allow_html=True)
-    st.markdown("<div style='text-align: center; font-size: 0.9em; color: gray;'>Time period: Past 24 hours</div>", unsafe_allow_html=True)
+    st.subheader("Token Netflow Distribution (Netflow > $5,000)")
+    st.write("Time period: Past 24 hours")
     render_netflow_scatterplot(SCATTERPLOT_DEFAULT_PAYLOAD)
 
 if __name__ == "__main__":
