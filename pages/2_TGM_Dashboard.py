@@ -3,10 +3,10 @@ from datetime import datetime as dt
 import streamlit as st
 import pandas as pd
 
-from components.holder_flows_horizontal_bar_chart import render_holder_flows_horizontal_bar_chart
-from components.holders_donut_chart import render_holders_donut_chart
-from components.pnl_leaderboard_bubble_chart import render_pnl_leaderboard_bubble_chart
-from components.dex_trades_hourly import render_dex_trades_hourly
+from components.tgm_holders_horizontal_bar_chart import render_holder_flows_horizontal_bar_chart
+from components.tgm_holders_donut_chart import render_holders_donut_chart
+from components.tgm_pnl_leaderboard_bubble_chart import render_pnl_leaderboard_bubble_chart
+from components.tgm_dextrades_combo_chart import render_dex_trades_hourly
 
 DEFAULT_TOKEN_ADDRESS = "2zMMhcVQEXDtdE6vsFS7S7D5oUodfJHE8vd1gnBouauv"
 DEFAULT_CHAIN = "solana"
