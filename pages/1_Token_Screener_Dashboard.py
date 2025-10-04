@@ -1,6 +1,6 @@
 import streamlit as st
-from datetime import datetime, timedelta
 from components.smart_money_gauge import render_gauge_charts
+from components.tgm_token_metrics import render_token_metrics
 
 st.set_page_config(page_title="TGM", layout="wide")
 st.title("TGM Dashboard")
@@ -11,6 +11,7 @@ with c1:
     token = st.text_input(
         "Token address", placeholder="0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48"
     )
+    token = token.strip().lower()
 with c2:
     chain = st.selectbox(
         "Chain", ["ethereum", "arbitrum", "optimism", "base", "bnb", "polygon"], index=0
@@ -23,19 +24,19 @@ with c4:
 
 
 # --- Main layout: Smart Money Gauges on left, Token metrics on right ---
+if not token:
+    st.info("👆 Enter a token address above to see detailed metrics")
+
 left_col, right_col = st.columns(2, gap="large")
 
 with left_col:
     with st.container():
-        if token:
-            gauge_data = render_gauge_charts(token, chain, period)
-            st.write(gauge_data) # FOR DEBUGGING, remove before commit
+        gauge_data = render_gauge_charts(token, chain, period)
+        # st.write(gauge_data)
 
-            if not gauge_data:
-                st.error("Failed to load Smart Money data.")
-        else:
-            st.info("👆 Enter a token address above to see Smart Money activity")
+        if not gauge_data:
+            st.error("Failed to load Smart Money data.")
 
 with right_col:
     with st.container():
-        st.subheader("Token Metrics")
+        render_token_metrics(token, chain, period)

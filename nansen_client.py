@@ -67,5 +67,8 @@ class NansenClient:
             return self._post_n_pages(payload, "/tgm/dex-trades", n)
         else:
             return self._post("/tgm/dex-trades", payload).get("data", [])
+    
+    def tgm_token_screener(self, payload: Dict):
+        return self._post("/token-screener", payload).get("data", [])
         
     # Add more function as needed for other endpoints below :D
