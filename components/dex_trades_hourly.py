@@ -25,7 +25,6 @@ def render_dex_trades_hourly(payload: Dict):
             df_24h = df[df['block_timestamp'] >= last_24h].copy()
 
             # Simplify block_timestamp to just date and hour
-            # df_24h['date'] = df_24h['block_timestamp'].dt.date
             df_24h['hour'] = df_24h['block_timestamp'].dt.hour
 
             # Aggregate: count transactions and sum traded_token_amount per hour

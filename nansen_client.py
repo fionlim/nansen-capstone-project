@@ -1,21 +1,16 @@
-import os
 import json
 from typing import Dict, List
 
 import requests
-from dotenv import load_dotenv
+import streamlit as st
 
-load_dotenv()
-
-API_BASE = os.getenv("NANSEN_BASE_URL", "https://api.nansen.ai/api/v1")
-API_KEY = os.getenv("apiKey")
-CANDLES_PATH = os.getenv("NANSEN_CANDLES_PATH", "")
+API_BASE = "https://api.nansen.ai/api/v1"
 
 class NansenClient:
     def __init__(self):
         self.base_url = API_BASE
         self.headers = {
-            "apiKey": API_KEY,
+            "apiKey": st.secrets["apiKey"],
             "Content-Type": "application/json",
         }
         if not self.headers["apiKey"]:
@@ -104,12 +99,10 @@ class NansenClient:
     def pfl_address_pnl_summary(self, payloads: List[Dict]) -> List[Dict]:
         """Fetch PnL summary for a specific address."""
         all_results = []
-        # print("payloads:", payloads)
         for payload in payloads:
-            # print("payload: ", payload)
             try:
                 data = self._post("/profiler/address/pnl-summary", payload)
-                # print("summary data: ", data)
+
                 # add address to each item in data
                 if "error" in data:
                     print(f"Error in response for address {payload['address']}: {data['error']}")
@@ -119,8 +112,6 @@ class NansenClient:
             except Exception as e:
                 print(f"Error fetching PnL summary for address {payload['address']}: {e}")
                 continue
-        # print("all results: ", all_results)
-        print("pnl-summary-size: ", len(all_results))
         return all_results
 
     def token_flows(self, payload: Dict) -> List[Dict]:

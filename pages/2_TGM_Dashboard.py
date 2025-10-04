@@ -1,13 +1,8 @@
 #!/usr/bin/env python3
-
-import os
-import json
 from datetime import datetime as dt
 import streamlit as st
-from dotenv import load_dotenv
 import pandas as pd
-import numpy as np
-import plotly.express as px
+
 from components.holder_flows_horizontal_bar_chart import render_holder_flows_horizontal_bar_chart
 from components.holders_donut_chart import render_holders_donut_chart
 from components.pnl_leaderboard_bubble_chart import render_pnl_leaderboard_bubble_chart
@@ -137,14 +132,6 @@ def main():
     
     st.write(f"Hello, {st.user.name}!")
 
-    # Check API key after login
-    # load_dotenv()
-    # api_key = os.getenv("apiKey")
-    # print("API KEY: {api_key}")
-    # if not api_key:
-    #     st.error("Missing API key. Add 'apiKey' to your .env file.")
-    #     st.stop()
-
     # Input widgets for payload variables
     st.subheader('Holder Distribution Query Settings')
     chain = st.selectbox(
@@ -158,9 +145,6 @@ def main():
     )
     token_address = st.text_input('Token Address', value=HOLDERS_DEFAULT_PAYLOAD.get('token_address', ''))
     aggregate_by_entity = st.selectbox('Aggregate by Entity', [True, False], index=0 if HOLDERS_DEFAULT_PAYLOAD.get('aggregate_by_entity', True) else 1)
-    # label_type = st.selectbox('Label Type', ['whale','public_figure','smart_money','all_holders','exchange'], index=[
-    #     'whale','public_figure','smart_money','all_holders','exchange'
-    # ].index(DEFAULT_PAYLOAD.get('label_type', 'all_holders')))
 
     # Update payload with widget values
     holders_payload = HOLDERS_DEFAULT_PAYLOAD.copy()
