@@ -59,5 +59,13 @@ class NansenClient:
             return self._post_n_pages(payload, "/smart-money/dex-trades", n)
         else:
             return self._post("/smart-money/dex-trades", payload).get("data", [])
+    
+    def tgm_dex_trades(self, payload: Dict, fetch_all: bool = False, n: int = 1):
+        if fetch_all:
+            return self._post_all_pages(payload, "/tgm/dex-trades")
+        elif n > 1:
+            return self._post_n_pages(payload, "/tgm/dex-trades", n)
+        else:
+            return self._post("/tgm/dex-trades", payload).get("data", [])
         
     # Add more function as needed for other endpoints below :D
