@@ -12,6 +12,17 @@ def render_gauge_charts(token_address: str, chain: str, period: str):
     2nd gauge: % of unique addresses out of the smart money transactions
     """
 
+    if not token_address or not chain or not period:
+        return {
+            "smart_money_percentage": None,
+            "total_transactions": 0,
+            "smart_money_transactions": 0,
+            "unique_smart_addresses": 0,
+            "period": period,
+            "token_address": token_address,
+            "chain": chain,
+        }
+
     period_mapping = {
         "1h": timedelta(hours=1),
         "24h": timedelta(hours=24),
