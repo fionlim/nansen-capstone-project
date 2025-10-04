@@ -21,9 +21,9 @@ class NansenClient:
         resp.raise_for_status()
         data = resp.json()
         return data
-    
-    def smart_money_inflows(self, payload: Dict):
-        return self._post("/smart-money/inflows", payload)
+
+    def smart_money_netflow(self, payload: Dict):
+        return self._post("/smart-money/netflow", payload)
 
     def smart_money_holdings(self, payload: Dict):
         return self._post("/smart-money/holdings", payload)
