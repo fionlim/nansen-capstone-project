@@ -1,60 +1,85 @@
-import os
-from typing import Dict, List, Optional
-
+from typing import Dict
 import requests
-from dotenv import load_dotenv
+import streamlit as st
 
-load_dotenv()
 
-API_BASE = os.getenv("NANSEN_BASE_URL", "https://api.nansen.ai/api/beta")
-API_KEY = os.getenv("apiKey")
-CANDLES_PATH = os.getenv("NANSEN_CANDLES_PATH", "")
+API_BASE = st.secrets.get("NANSEN_API_BASE", "https://api.nansen.ai/api/v1")
+API_KEY = st.secrets.get("apiKey", "")
+
 
 class NansenClient:
-    def __init__(self, base_url: Optional[str] = None, api_key: Optional[str] = None):
-        self.base_url = base_url or API_BASE
-        self.headers = {
-            "apiKey": api_key or API_KEY,
-            "Content-Type": "application/json",
-        }
-        if not self.headers["apiKey"]:
-            raise ValueError("Missing apiKey. Add it to .env file.")
+   def __init__(self):
+       self.base_url = API_BASE
+       self.headers = {
+           "apiKey": API_KEY,
+           "Content-Type": "application/json",
+       }
+       if not self.headers["apiKey"]:
+           raise ValueError("Missing apiKey. Add it to .streamlit/secrets.toml.")
 
-    def _post(self, path: str, json_body: Dict, timeout: int = 45):
-        url = f"{self.base_url}{path}"
-        resp = requests.post(url, headers=self.headers, json=json_body, timeout=timeout)
-        resp.raise_for_status()
-        data = resp.json()
-        if isinstance(data, dict) and "data" in data:
-            return data["data"]
-        if isinstance(data, list):
-            return data
-        return []
 
-    def smart_money_inflows(self, payload: Dict) -> List[Dict]:
-        return self._post("/smart-money/inflows", payload)
+   def _post(self, path: str, json_body: Dict, timeout: int = 45):
+       url = f"{self.base_url}{path}"
+       resp = requests.post(url, headers=self.headers, json=json_body, timeout=timeout)
+       resp.raise_for_status()
+       data = resp.json()
+       return data
+  
+   def _post_all_pages(self, payload: Dict, path: str):
+       all_items = []
+       while True:
+           response = self._post(path, payload)
+           items = response.get("data", [])
+           all_items.extend(items)
+           if response["pagination"]["is_last_page"] is True:
+               break
+           payload["pagination"]["page"] += 1
+       return all_items
+  
+   def _post_n_pages(self, payload: Dict, path: str, n: int):
+       all_items = []
+       for _ in range(n):
+           response = self._post(path, payload)
+           items = response.get("data", [])
+           all_items.extend(items)
+           if response["pagination"]["is_last_page"] is True:
+               break
+           payload["pagination"]["page"] += 1
+       return all_items
 
-    def smart_money_holdings(self, payload: Dict) -> List[Dict]:
-        return self._post("/smart-money/holdings", payload)
 
-    def token_screener(self, payload: Dict) -> List[Dict]:
-        return self._post("/token-screener", payload)
+   def smart_money_netflow(self, payload: Dict, fetch_all: bool = False, n: int = 1):
+       if fetch_all:
+           return self._post_all_pages(payload, "/smart-money/netflow")
+       elif n > 1:
+           return self._post_n_pages(payload, "/smart-money/netflow", n)
+       else:
+           return self._post("/smart-money/netflow", payload).get("data", [])
+  
+   def smart_money_dex_trades(self, payload: Dict, fetch_all: bool = False, n: int = 1):
+       if fetch_all:
+           return self._post_all_pages(payload, "/smart-money/dex-trades")
+       elif n > 1:
+           return self._post_n_pages(payload, "/smart-money/dex-trades", n)
+       else:
+           return self._post("/smart-money/dex-trades", payload).get("data", [])
+      
+   def get_portfolio_history(self, payload: dict):
+       return self._post("/profiler/address/historical-balances", payload).get("data", [])
 
-    def flow_intelligence(self, payload: Dict) -> List[Dict]:
-        return self._post("/tgm/flow-intelligence", payload)
 
-    def token_candles(self, payload: Dict, path: Optional[str] = None) -> List[Dict]:
-        """
-        Fetch OHLCV candles for a token. The endpoint path must be provided via env NANSEN_CANDLES_PATH
-        or explicitly via the path argument, to comply with documented endpoints.
-        """
-        candles_path = (path or CANDLES_PATH).strip()
-        if not candles_path:
-            raise ValueError("Missing NANSEN_CANDLES_PATH env or explicit path for candles endpoint.")
-        if not candles_path.startswith("/"):
-            candles_path = "/" + candles_path
-        return self._post(candles_path, payload)
+   def get_counterparties(self, payload: dict):
+       return self._post("/profiler/address/counterparties", payload).get("data", [])
 
-    def token_flows(self, payload: Dict) -> List[Dict]:
-        """Token God Mode flows (price history and flows)."""
-        return self._post("/tgm/flows", payload)
+
+   def get_related_wallets(self, payload: dict):
+       return self._post("/profiler/address/related-wallets", payload).get("data", [])
+
+
+   def get_pnl_summary(self, payload: dict):
+       return self._post("/profiler/address/pnl-summary", payload)
+
+
+   # Add more function as needed for other endpoints below :D
+
+
