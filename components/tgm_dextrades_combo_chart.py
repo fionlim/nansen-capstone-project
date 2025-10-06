@@ -1,15 +1,51 @@
 from typing import Dict
 import streamlit as st
+import pandas as pd
+from datetime import datetime as dt
+
 import plotly.graph_objects as go
 from nansen_client import NansenClient
 from dataframes import dex_trades_to_dataframe
-import pandas as pd
 
-def render_dex_trades_hourly(payload: Dict):
+
+def render_dex_trades_hourly(chain: str, token_address: str):
     client = NansenClient()
-
+    DATE_TO = dt.today().strftime('%Y-%m-%d') # today
+    DATE_FROM = (dt.today() - pd.Timedelta(days=2)).strftime('%Y-%m-%d') 
+    payload = {
+        "chain": chain,
+        "token_address": token_address,
+        "only_smart_money": False,
+        "date": {
+            "from": DATE_FROM,
+            "to": DATE_TO
+        },
+        "pagination": {
+            "page": 1,
+            "per_page": 100
+        },
+        "filters": {
+            "action": "BUY",
+            "estimated_value_usd": {
+                "min": 1000
+            },
+            "include_smart_money_labels": [
+                "Whale",
+                "Smart Trader"
+            ],
+            "token_amount": {
+                "min": 100
+            }
+        },
+        "order_by": [
+            {
+                "field": "block_timestamp",
+                "direction": "ASC"
+            }
+        ]
+    }
     try:
-        items = client.dex_trades(payload)
+        items = client.tgm_dex_trades(payload)
         df = dex_trades_to_dataframe(items)
         if df.empty:
             st.warning("No DEX trades data returned for the selected filters.")

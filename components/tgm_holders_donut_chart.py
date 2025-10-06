@@ -1,17 +1,51 @@
-from typing import Dict
 import streamlit as st
-import plotly.express as px 
+import plotly.express as px
+import requests
+
 from nansen_client import NansenClient
 from dataframes import holders_to_dataframe
-import pandas as pd
-import plotly.graph_objects as go
 
-def render_holders_donut_chart(payload: Dict):
+def render_holders_donut_chart(chain: str, token_address: str, aggregate_by_entity: bool):
     client = NansenClient()
+    payload = {
+        "chain": chain,
+        "token_address": token_address,
+        "aggregate_by_entity": aggregate_by_entity,
+        "label_type": "all_holders",
+        "pagination": {
+            "page": 1,
+            "per_page": 10 
+        },
+        "filters": {
+            "include_smart_money_labels": [
+            "30D Smart Trader",
+            "Fund",
+            "90D Smart Trader",
+            "180D Smart Trader", 
+            "Fund",
+            "Smart Trader"
+                ],
+            "ownership_percentage": {
+            "min": 0.001
+            },
+            "token_amount": {
+            "min": 1000
+            },
+            "value_usd": {
+            "min": 10000
+            }
+        },
+        "order_by": [
+            {
+            "field": "ownership_percentage",
+            "direction": "DESC"
+            }
+        ]
+    }
 
     try:
         # holder_types = ['smart_money', 'exchange', 'whale', 'public_figure', 'all_holders']
-        items = client.tgm_holders(payload)
+        items = client.tgm_holders(payload, fetch_all=True)
         df = holders_to_dataframe(items)
 
         if df.empty:
@@ -38,6 +72,7 @@ def render_holders_donut_chart(payload: Dict):
             fig3 = px.pie(inflows, names='holder_type', values='total_inflow', hole=0.5,
                         title='Aggregated Total Inflow by Label')
             donut_cols[2].plotly_chart(fig3, use_container_width=True)
-
+    except requests.exceptions.HTTPError as http_err:
+        st.error(f"Failed to fetch holder distribution data: {http_err}")
     except Exception as e:
         st.error(f"Unexpected error: {e}" )

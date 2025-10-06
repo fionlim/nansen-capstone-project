@@ -22,79 +22,79 @@ class NansenClient:
         data = resp.json()
         return data
 
-    def smart_money_netflow(self, payload: Dict):
-        return self._post("/smart-money/netflow", payload)
-
-    def smart_money_holdings(self, payload: Dict):
-        return self._post("/smart-money/holdings", payload)
-
-    def token_screener(self, payload: Dict):
-        return self._post("/token-screener", payload)
-
-    def flow_intelligence(self, payload: Dict):
-        return self._post("/tgm/flow-intelligence", payload)
-    
-    def dex_trades(self, payload: Dict):
-        all_results = []
-        page = payload["pagination"]["page"]
-        per_page = payload["pagination"]["per_page"]
+    def _post_all_pages(self, payload: Dict, path: str):
+        all_items = []
         while True:
-            payload["pagination"]["page"] = page
-            results = self._post("/tgm/dex-trades", payload)['data']
-            if not results:
+            response = self._post(path, payload)
+            items = response.get("data", [])
+            all_items.extend(items)
+            if response["pagination"]["is_last_page"] is True:
                 break
-            all_results.extend(results)
-            if len(results) < per_page:
-                break  # Last page reached
-            page += 1
-        payload["pagination"]["page"] = 1  # Reset page to original
-        return all_results
-
-    def tgm_holders(self, payload: Dict): 
-        """
-        Fetch all pages of /tgm/holders, aggregating results into a single list.
-        """
-        all_results = []
-        page = payload["pagination"]["page"]
-        per_page = payload["pagination"]["per_page"]
-        while True:
-            payload["pagination"]["page"] = page
-            results = self._post("/tgm/holders", payload)['data']
-            if not results:
-                break
-            all_results.extend(results)
-            if len(results) < per_page:
-                break  # Last page reached
-            page += 1
-        payload["pagination"]["page"] = 1  # Reset page to original
-        return all_results 
+            payload["pagination"]["page"] += 1
+        return all_items
     
-    def tgm_pnl_leaderboard(self, payload: Dict):
+    def _post_n_pages(self, payload: Dict, path: str, n: int):
+        all_items = []
+        for _ in range(n):
+            response = self._post(path, payload)
+            items = response.get("data", [])
+            all_items.extend(items)
+            if response["pagination"]["is_last_page"] is True:
+                break
+            payload["pagination"]["page"] += 1
+        return all_items
+    
+    def smart_money_netflow(self, payload: Dict, fetch_all: bool = False, n: int = 1):
+        if fetch_all:
+            return self._post_all_pages(payload, "/smart-money/netflow")
+        elif n > 1:
+            return self._post_n_pages(payload, "/smart-money/netflow", n)
+        else:
+            return self._post("/smart-money/netflow", payload).get("data", [])
+    
+    def smart_money_dex_trades(self, payload: Dict, fetch_all: bool = False, n: int = 1):
+        if fetch_all:
+            return self._post_all_pages(payload, "/smart-money/dex-trades")
+        elif n > 1:
+            return self._post_n_pages(payload, "/smart-money/dex-trades", n)
+        else:
+            return self._post("/smart-money/dex-trades", payload).get("data", [])
+    
+     # Add more function as needed for other endpoints below :D
+    
+    def tgm_dex_trades(self, payload: Dict, fetch_all: bool = False, n: int = 1):
+        if fetch_all:
+            return self._post_all_pages(payload, "/tgm/dex-trades")
+        elif n > 1:
+            return self._post_n_pages(payload, "/tgm/dex-trades", n)
+        else:
+            return self._post("/tgm/dex-trades", payload).get("data", [])
+
+    def tgm_holders(self, payload: Dict, fetch_all: bool = False, n: int = 1):
+        if fetch_all:
+            return self._post_all_pages(payload, "/tgm/holders")
+        elif n > 1:
+            return self._post_n_pages(payload, "/tgm/holders", n)
+        else:
+            return self._post("/tgm/holders", payload).get("data", [])
+    
+    def tgm_pnl_leaderboard(self, payload: Dict, fetch_all: bool = False, n: int = 1):
         """
         Fetch all pages of /tgm/pnl-leaderboard, aggregating results into a single list.
         """
-        all_results = []
-        page = payload["pagination"]["page"]
-        per_page = payload["pagination"]["per_page"]
-        while True:
-            payload["pagination"]["page"] = page
-            results = self._post("/tgm/pnl-leaderboard", payload)['data']
-            if not results:
-                break
-            all_results.extend(results)
-            if len(results) < per_page:
-                break  # Last page reached
-            page += 1
-        payload["pagination"]["page"] = 1  # Reset page to original
-        return all_results
+        if fetch_all:
+            return self._post_all_pages(payload, "/tgm/pnl-leaderboard")
+        elif n > 1:
+            return self._post_n_pages(payload, "/tgm/pnl-leaderboard", n)
+        else:
+            return self._post("/tgm/pnl-leaderboard", payload).get("data", [])
     
     def pfl_address_pnl_summary(self, payloads: List[Dict]):
-        """Fetch PnL summary for a specific address."""
+        """Fetch PnL summary for array of addresses. Fixed number of pages for each address."""
         all_results = []
         for payload in payloads:
             try:
                 data = self._post("/profiler/address/pnl-summary", payload)
-
                 # add address to each item in data
                 if "error" in data:
                     print(f"Error in response for address {payload['address']}: {data['error']}")
@@ -105,7 +105,3 @@ class NansenClient:
                 print(f"Error fetching PnL summary for address {payload['address']}: {e}")
                 continue
         return all_results
-
-    def token_flows(self, payload: Dict):
-        """Token God Mode flows (price history and flows)."""
-        return self._post("/tgm/flows", payload)

@@ -6,12 +6,47 @@ from dataframes import holders_to_dataframe
 import pandas as pd
 import plotly.graph_objects as go
 
-def render_holder_flows_horizontal_bar_chart(payload: Dict):
+def render_holder_flows_horizontal_bar_chart(chain: str, token_address: str, aggregate_by_entity: bool):
     """
     Render a centered horizontal bar chart with inflow (green, right) and outflow (red, left) by holder_type.
     Fetches data using the same payload logic as render_holder_distribution.
     """
     client = NansenClient()
+    payload = {
+        "chain": chain,
+        "token_address": token_address,
+        "aggregate_by_entity": aggregate_by_entity,
+        "label_type": "all_holders",
+        "pagination": {
+            "page": 1,
+            "per_page": 10
+        },
+        "filters": {
+            "include_smart_money_labels": [
+            "30D Smart Trader",
+            "Fund",
+            "90D Smart Trader",
+            "180D Smart Trader", 
+            "Fund",
+            "Smart Trader"
+                ],
+            "ownership_percentage": {
+            "min": 0.001
+            },
+            "token_amount": {
+            "min": 1000
+            },
+            "value_usd": {
+            "min": 10000
+            }
+        },
+        "order_by": [
+            {
+            "field": "ownership_percentage",
+            "direction": "DESC"
+            }
+        ]
+    }
     items = client.tgm_holders(payload)
     df = holders_to_dataframe(items)
 

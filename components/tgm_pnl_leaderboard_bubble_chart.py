@@ -1,13 +1,42 @@
-from typing import Dict
+from datetime import datetime as dt
 import streamlit as st
 import plotly.express as px 
-from nansen_client import NansenClient
-from dataframes import pnl_leaderboard_to_dataframe, pnl_summary_to_dataframe
 import pandas as pd
 import plotly.graph_objects as go
 
-def render_pnl_leaderboard_bubble_chart(payload: Dict):
+from nansen_client import NansenClient
+from dataframes import pnl_leaderboard_to_dataframe, pnl_summary_to_dataframe
+
+def render_pnl_leaderboard_bubble_chart(chain: str, token_address: str):
     client = NansenClient()
+    DATE_FROM = (dt.today() - pd.Timedelta(days=7)).strftime('%Y-%m-%d')  # one week ago
+    DATE_TO = dt.today().strftime('%Y-%m-%d') # today
+    payload = {
+        "chain": chain,
+        "token_address": token_address,
+        "date": {
+            "from": DATE_FROM,
+            "to": DATE_TO
+        },
+        "pagination": {
+            "page": 1,
+            "per_page": 10
+        },
+        "filters": {
+            "holding_usd": {
+                "min": 1000
+            },
+            "pnl_usd_realised": {
+                "min": 1000
+            }
+        },
+        "order_by": [
+            {
+                "field": "pnl_usd_realised",
+                "direction": "DESC"
+            }
+        ]
+    }
     try:
         leaderboard_items = client.tgm_pnl_leaderboard(payload)
         leaderboard_df = pnl_leaderboard_to_dataframe(leaderboard_items).head(100)  # Limit to top 100 for performance
