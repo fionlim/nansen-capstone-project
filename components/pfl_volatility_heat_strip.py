@@ -15,8 +15,9 @@ def render_volatility_heat_strip(client: NansenClient, address: str, chain_all: 
             "chain": chain_all,
             "filters": {"hide_spam_tokens": hide_spam, "value_usd": {"min": 10}},
             "date": {"from": from_iso, "to": to_iso},
+            "pagination": { "page": 1,"per_page": 100 }
         }
-        rows = client.profiler_address_historical_balances_all(payload)
+        rows = client.profiler_address_historical_balances(payload, fetch_all=True)
         df = pd.DataFrame(rows)
         if df.empty:
             st.info("Insufficient data to compute volatility.")

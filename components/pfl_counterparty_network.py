@@ -113,8 +113,8 @@ def render_counterparty_network(client: NansenClient, address: str, chain_all: s
             "order_by": [{"field": "total_volume_usd", "direction": "DESC"}],
             "pagination": {"page": 1, "per_page": 10},
         }
-        resp = client.profiler_address_counterparties(payload)
-        df = pd.DataFrame(resp.get("data", []))
+        rows = client.profiler_address_counterparties(payload) 
+        df = pd.DataFrame(rows)
         if df.empty:
             st.info("No counterparty interactions found for the selected range.")
             return
@@ -166,7 +166,6 @@ def render_counterparty_network(client: NansenClient, address: str, chain_all: s
         anns = _arrow_annotations_from_graph(G, pos, color_map=edge_color_map, width_key=("vol",), base_dual_dir_offset=0.03, group_step=0.04, standoff_px=10)
         fig = go.Figure(data=[*legend_traces, node_trace])
         fig.update_layout(
-            title="Arrow = Direction",
             xaxis=dict(visible=False),
             yaxis=dict(visible=False),
             annotations=anns,

@@ -15,7 +15,7 @@ def _fetch_balances_df(client: NansenClient, address: str, chain_all: str, hide_
         "pagination": {"page": 1, "per_page": 100}
     }
     resp = client.profiler_address_current_balance(payload)
-    return pd.DataFrame(resp.get("data", []))
+    return pd.DataFrame(resp)
 
 @st.fragment
 def _treemap_fragment(df: pd.DataFrame, *, fragment_key: str = "pfl_portfolio_treemap_fragment"):

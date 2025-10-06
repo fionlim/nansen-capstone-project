@@ -100,10 +100,6 @@ def _arrow_annotations_from_graph(G, pos, *, color_map, width_key=("w",), base_d
     return anns
 
 def render_related_wallet_network(client: NansenClient, address: str, chain_tx: str):
-    """
-    Render the 'Related Wallets' network for the given wallet on the chosen transaction chain.
-    This now mirrors how the Transaction Size histogram takes in `chain_tx`.
-    """
     st.subheader("Top 10 Related wallets network")
     st.text("Colour = relation; arrows=direction; thicker=more recent.")
 
@@ -115,7 +111,7 @@ def render_related_wallet_network(client: NansenClient, address: str, chain_tx: 
             "order_by": [{"field": "order", "direction": "ASC"}],
         }
         resp = client.profiler_address_related_wallets(payload)
-        df = pd.DataFrame(resp.get("data", []))
+        df = df = pd.DataFrame(resp)
         if df.empty:
             st.info("No related wallets found.")
             return
@@ -190,7 +186,6 @@ def render_related_wallet_network(client: NansenClient, address: str, chain_tx: 
         anns2 = _arrow_annotations_from_graph(G2, pos2, color_map=cat_color, width_key=("w",), base_dual_dir_offset=0.03, group_step=0.04, standoff_px=10)
         fig_rel = go.Figure(data=[*legend_traces2, node_trace2])
         fig_rel.update_layout(
-            title=f"Arrow color = Relation type; Thicker = More recent  •  Chain: {chain_tx}",
             xaxis=dict(visible=False),
             yaxis=dict(visible=False),
             annotations=anns2,
