@@ -47,11 +47,6 @@ def render_gauge_charts(token_address: str, chain: str, period: str):
         "token_address": token_address,
         "date": {"from": from_datetime, "to": to_datetime},
         "pagination": {"page": 1, "per_page": 1000},  # max for tgm/dex-trades endpoint
-        # "filters": {
-        #     "token_amount": {
-        #         "min": 100
-        #     }
-        # },
         "order_by": [{"field": "block_timestamp", "direction": "ASC"}],
     }
 
