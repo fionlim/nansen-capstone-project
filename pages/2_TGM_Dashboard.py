@@ -1,5 +1,5 @@
 import streamlit as st
-from components.smart_money_gauge import render_gauge_charts
+from components.sm_gauge import render_gauge_charts
 from components.tgm_token_metrics import render_token_metrics
 
 st.set_page_config(page_title="TGM", layout="wide")
