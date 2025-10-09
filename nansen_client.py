@@ -16,7 +16,7 @@ class NansenClient:
             raise ValueError("Missing apiKey. Add it to .streamlit/secrets.toml.")
 
 
-    # ---------- Helper endpoints ----------
+    # ---------- Helper functions ----------
 
     def _post(self, path: str, json_body: Dict, timeout: int = 45):
         url = f"{self.base_url}{path}"
