@@ -59,8 +59,10 @@ with right_col:
 # --- Bottom layout: Holder Distributions ---
 
 # Input widgets for payload variables
-st.subheader('Holder Distribution Query Settings')
-aggregate_by_entity = st.selectbox('Aggregate by Entity', [False, True], index=0)
+st.subheader('Holder Distribution & Flows')
+col1, col2 = st.columns([1, 4])
+with col1:
+    aggregate_by_entity = st.selectbox('Aggregate by Entity', [False, True], index=0)
 
 # Update payload with widget values
 render_holders_donut_chart(chain, token, aggregate_by_entity)
