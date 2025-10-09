@@ -99,7 +99,7 @@ def main():
         }
         st.subheader("Top 3 Tokens by DEX Trading Value (24h)")
         value_payload = json.loads(json.dumps(DEX_DEFAULT_PAYLOAD))
-        if ["all"] in selected_chains or set(selected_chains) == set(all_chains):
+        if "all" in selected_chains or set(selected_chains) == set(all_chains):
             value_payload["chains"] = ["all"]
         else:
             value_payload["chains"] = selected_chains
@@ -135,7 +135,7 @@ def main():
         st.subheader("Top 3 Tokens by Netflow (24h)")
 
         netflow_payload = json.loads(json.dumps(NETFLOW_DEFAULT_PAYLOAD))
-        if ["all"] in selected_chains or set(selected_chains) == set(all_chains):
+        if "all" in selected_chains or set(selected_chains) == set(all_chains):
             netflow_payload["chains"] = ["all"]
         else:
             netflow_payload["chains"] = selected_chains

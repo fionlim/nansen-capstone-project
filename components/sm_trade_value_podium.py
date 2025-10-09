@@ -38,11 +38,13 @@ def render_dex_trades_podium(payload: Dict):
         gold_height = podium_df.iloc[0]['bar_height']
         gold_medal_top = -20 if gold_height >= 20 else -45
 
-        silver_height = podium_df.iloc[1]['bar_height']
-        silver_medal_top = -20 if silver_height >= 20 else -45
+        if len(podium_df) > 1:
+            silver_height = podium_df.iloc[1]['bar_height']
+            silver_medal_top = -20 if silver_height >= 20 else -45
 
-        bronze_height = podium_df.iloc[2]['bar_height']
-        bronze_medal_top = -20 if bronze_height >= 20 else -45
+        if len(podium_df) > 2:
+            bronze_height = podium_df.iloc[2]['bar_height']
+            bronze_medal_top = -20 if bronze_height >= 20 else -45
 
         st.markdown(
             """
