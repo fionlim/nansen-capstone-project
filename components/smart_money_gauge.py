@@ -31,7 +31,8 @@ def render_gauge_charts(token_address: str, chain: str, period: str):
     }
 
     if period not in period_mapping:
-        raise ValueError(f"Invalid period: {period}. Must be one of: 24h, 7d, 30d")
+        valid_periods = ", ".join(period_mapping.keys())
+        raise ValueError(f"Invalid period: {period}. Must be one of: {valid_periods}")
 
     # Calculate date range based on period
     now = datetime.now(timezone.utc)
