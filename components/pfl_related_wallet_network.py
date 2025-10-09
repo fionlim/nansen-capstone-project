@@ -4,7 +4,7 @@ import pandas as pd
 import streamlit as st
 import plotly.graph_objects as go
 import networkx as nx
-
+from collections import defaultdict
 from nansen_client import NansenClient
 
 def _short_addr(a: str) -> str:
@@ -19,7 +19,6 @@ def _first_label(x):
 
 def _arrow_annotations_from_graph(G, pos, *, color_map, width_key=("w",), base_dual_dir_offset=0.03, group_step=0.04, standoff_px=10):
     anns = []
-    from collections import defaultdict
     same_dir_groups = defaultdict(list)
     for u, v, data in G.edges(data=True):
         same_dir_groups[(u, v)].append(data)
