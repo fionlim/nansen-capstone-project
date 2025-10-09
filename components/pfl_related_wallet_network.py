@@ -111,7 +111,7 @@ def render_related_wallet_network(client: NansenClient, address: str, chain_tx: 
             "order_by": [{"field": "order", "direction": "ASC"}],
         }
         resp = client.profiler_address_related_wallets(payload)
-        df = df = pd.DataFrame(resp)
+        df = pd.DataFrame(resp)
         if df.empty:
             st.info("No related wallets found.")
             return
