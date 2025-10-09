@@ -15,6 +15,9 @@ class NansenClient:
         if not self.headers["apiKey"]:
             raise ValueError("Missing apiKey. Add it to .streamlit/secrets.toml.")
 
+
+    # ---------- Helper endpoints ----------
+
     def _post(self, path: str, json_body: Dict, timeout: int = 45):
         url = f"{self.base_url}{path}"
         resp = requests.post(url, headers=self.headers, json=json_body, timeout=timeout)
@@ -32,7 +35,7 @@ class NansenClient:
                 break
             payload["pagination"]["page"] += 1
         return all_items
-    
+
     def _post_n_pages(self, payload: Dict, path: str, n: int):
         all_items = []
         for _ in range(n):
@@ -44,6 +47,9 @@ class NansenClient:
             payload["pagination"]["page"] += 1
         return all_items
 
+
+    # ---------- Smart Money endpoints ----------
+
     def smart_money_netflow(self, payload: Dict, fetch_all: bool = False, n: int = 1):
         if fetch_all:
             return self._post_all_pages(payload, "/smart-money/netflow")
@@ -51,7 +57,7 @@ class NansenClient:
             return self._post_n_pages(payload, "/smart-money/netflow", n)
         else:
             return self._post("/smart-money/netflow", payload).get("data", [])
-    
+
     def smart_money_dex_trades(self, payload: Dict, fetch_all: bool = False, n: int = 1):
         if fetch_all:
             return self._post_all_pages(payload, "/smart-money/dex-trades")
@@ -59,5 +65,78 @@ class NansenClient:
             return self._post_n_pages(payload, "/smart-money/dex-trades", n)
         else:
             return self._post("/smart-money/dex-trades", payload).get("data", [])
+    
 
-    # Add more function as needed for other endpoints below :D
+    # ---------- TGM endpoints ----------
+
+    def tgm_dex_trades(self, payload: Dict, fetch_all: bool = False, n: int = 1):
+        if fetch_all:
+            return self._post_all_pages(payload, "/tgm/dex-trades")
+        elif n > 1:
+            return self._post_n_pages(payload, "/tgm/dex-trades", n)
+        else:
+            return self._post("/tgm/dex-trades", payload).get("data", [])
+    
+    def tgm_token_screener(self, payload: Dict):
+        return self._post("/token-screener", payload).get("data", [])
+    
+    
+    # ---------- Profiler endpoints ----------
+
+    # Base prefix for Profiler
+    _P = "/profiler"
+
+    def profiler_address_current_balance(self, payload: Dict, fetch_all: bool = False, n: int = 1):
+        path = f"{self._P}/address/current-balance"
+        if fetch_all:
+            return self._post_all_pages(payload, path)
+        elif n > 1:
+            return self._post_n_pages(payload, path, n)
+        else:
+            return self._post(path, payload).get("data", [])
+
+    def profiler_address_historical_balances(self, payload: Dict, fetch_all: bool = False, n: int = 1):
+        path = f"{self._P}/address/historical-balances"
+        if fetch_all:
+            return self._post_all_pages(payload, path)
+        elif n > 1:
+            return self._post_n_pages(payload, path, n)
+        else:
+            return self._post(path, payload).get("data", [])
+
+    def profiler_address_counterparties(self, payload: Dict, fetch_all: bool = False, n: int = 1):
+        path = f"{self._P}/address/counterparties"
+        if fetch_all:
+            return self._post_all_pages(payload, path)
+        elif n > 1:
+            return self._post_n_pages(payload, path, n)
+        else:
+            return self._post(path, payload).get("data", [])
+
+    def profiler_address_related_wallets(self, payload: Dict, fetch_all: bool = False, n: int = 1):
+        path = f"{self._P}/address/related-wallets"
+        if fetch_all:
+            return self._post_all_pages(payload, path)
+        elif n > 1:
+            return self._post_n_pages(payload, path, n)
+        else:
+            return self._post(path, payload).get("data", [])
+
+    def profiler_address_transactions(self, payload: Dict, fetch_all: bool = False, n: int = 1):
+        path = f"{self._P}/address/transactions"
+        if fetch_all:
+            return self._post_all_pages(payload, path)
+        elif n > 1:
+            return self._post_n_pages(payload, path, n)
+        else:
+            return self._post(path, payload).get("data", [])
+
+    def profiler_address_pnl_summary(self, payload: Dict):
+        """
+        NOTE: This endpoint returns a single summary object (not a list under 'data').
+        Kept as a simple _post (no pagination flags) so components can access keys like
+        'top5_tokens' directly, e.g., resp.get('top5_tokens', []).
+        """
+        path = f"{self._P}/address/pnl-summary"
+        return self._post(path, payload)
+        
