@@ -17,7 +17,7 @@ def render_transactions_log_hist(client: NansenClient, address: str, chain_tx: s
             "order_by": [{"field": "block_timestamp", "direction": "DESC"}],
             "pagination": {"page": 1, "per_page": 20},
         }
-        rows = rows = client.profiler_address_transactions(payload, n=5)
+        rows = client.profiler_address_transactions(payload, n=5)
         df = pd.DataFrame(rows)
         if df.empty or "volume_usd" not in df.columns:
             st.info("No transactions found to plot.")
