@@ -48,10 +48,90 @@ def render_token_metrics(token_address: str, chain: str, period: str):
                 client = NansenClient()
                 items = client.tgm_token_screener(payload)
                 df = tgm_token_screener_to_dataframe(items)
-                token_data = df.iloc[0]  # df should only have one row
+                if not df.empty:
+                    token_data = df.iloc[0]  # df should only have one row
 
-                # Show token symbol and age
-                col_info1, col_info2 = st.columns(2)
+                    # Show token symbol and age
+                    col_info1, col_info2 = st.columns(2)
+                    with col_info1:
+                        st.metric("Token Symbol", token_data.get("token_symbol", "N/A"))
+                    with col_info2:
+                        st.metric(
+                            "Token Age", token_data.get("token_age_days", "N/A")
+                        )
+
+                    # Row 1: Market Cap and FDV
+                    col1, col2 = st.columns(2)
+                    with col1:
+                        st.metric(
+                            label="Market Cap",
+                            value=token_data.get("market_cap_usd_formatted", "N/A"),
+                        )
+                    with col2:
+                        st.metric(
+                            label="FDV",
+                            value=token_data.get("fdv_usd_formatted", "N/A"),
+                        )
+
+                    # Row 2: Holders and Transfers
+                    col3, col4 = st.columns(2)
+                    with col3:
+                        st.metric(
+                            label="Holders",
+                            value=token_data.get("holders_formatted", "N/A"),
+                        )
+                    with col4:
+                        st.metric(
+                            label="Transfers (24h)",
+                            value=token_data.get("transfers_24h_formatted", "N/A"),
+                        )
+
+                    # Row 3: Price and Price Change
+                    col5, col6 = st.columns(2)
+                    with col5:
+                        st.metric(
+                            label="Price (USD)",
+                            value=token_data.get("price_usd_formatted", "N/A"),
+                        )
+                    with col6:
+                        st.metric(
+                            label="Price Change (24h)",
+                            value=token_data.get("price_change_24h_formatted", "N/A"),
+                            delta=token_data.get("price_change_24h_delta", None),
+                            delta_color=format_delta_color(token_data.get("price_change_24h_delta", "")),
+                        )
+
+                    # Row 4: Volume and Volume Change
+                    col7, col8 = st.columns(2)
+                    with col7:
+                        st.metric(
+                            label="Volume (24h)",
+                            value=token_data.get("volume_24h_usd_formatted", "N/A"),
+                        )
+                    with col8:
+                        st.metric(
+                            label="Volume Change (24h)",
+                            value=token_data.get("volume_change_24h_formatted", "N/A"),
+                            delta=token_data.get("volume_change_24h_delta", None),
+                            delta_color=format_delta_color(token_data.get("volume_change_24h_delta", "")),
+                        )
+
+                    # Row 5: Liquidity and Liquidity Change
+                    col9, col10 = st.columns(2)
+                    with col9:
+                        st.metric(
+                            label="Liquidity (USD)",
+                            value=token_data.get("liquidity_usd_formatted", "N/A"),
+                        )
+                    with col10:
+                        st.metric(
+                            label="Liquidity Change (24h)",
+                            value=token_data.get("liquidity_change_24h_formatted", "N/A"),
+                            delta=token_data.get("liquidity_change_24h_delta", None),
+                            delta_color=format_delta_color(token_data.get("liquidity_change_24h_delta", "")),
+                        )
+                else:
+                    st.warning("No token metrics found for the specified token address and period.")
                 with col_info1:
                     st.metric("Token Symbol", token_data.get("token_symbol", "N/A"))
                 with col_info2:
