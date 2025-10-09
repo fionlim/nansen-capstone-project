@@ -57,7 +57,6 @@ def render_holder_flows_horizontal_bar_chart(chain: str, token_address: str, agg
         'total_outflow': 'sum'
     }).reset_index()
     agg['total_outflow'] = -agg['total_outflow']
-    print(agg['holder_type'].unique())
     fig = go.Figure()
     fig.add_trace(go.Bar(
         y=agg['holder_type'],

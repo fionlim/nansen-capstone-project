@@ -57,7 +57,6 @@ def render_dex_trades_hourly(chain: str, token_address: str):
             # Filter for transactions in the last 24 hours
             latest_time = df['block_timestamp'].max()
             last_24h = latest_time - pd.Timedelta(hours=24)
-            print(last_24h, latest_time)
             df_24h = df[df['block_timestamp'] >= last_24h].copy()
 
             # Simplify block_timestamp to just date and hour
