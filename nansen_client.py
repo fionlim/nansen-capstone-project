@@ -1,4 +1,4 @@
-from typing import Dict
+from typing import Dict, List
 import requests
 import streamlit as st
 
@@ -46,7 +46,7 @@ class NansenClient:
                 break
             payload["pagination"]["page"] += 1
         return all_items
-
+        
 
     # ---------- Smart Money endpoints ----------
 
@@ -79,6 +79,22 @@ class NansenClient:
     
     def tgm_token_screener(self, payload: Dict):
         return self._post("/token-screener", payload).get("data", [])
+
+    def tgm_holders(self, payload: Dict, fetch_all: bool = False, n: int = 1):
+        if fetch_all:
+            return self._post_all_pages(payload, "/tgm/holders")
+        elif n > 1:
+            return self._post_n_pages(payload, "/tgm/holders", n)
+        else:
+            return self._post("/tgm/holders", payload).get("data", [])
+    
+    def tgm_pnl_leaderboard(self, payload: Dict, fetch_all: bool = False, n: int = 1):
+        if fetch_all:
+            return self._post_all_pages(payload, "/tgm/pnl-leaderboard")
+        elif n > 1:
+            return self._post_n_pages(payload, "/tgm/pnl-leaderboard", n)
+        else:
+            return self._post("/tgm/pnl-leaderboard", payload).get("data", [])
     
     
     # ---------- Profiler endpoints ----------
@@ -140,3 +156,20 @@ class NansenClient:
         path = f"{self._P}/address/pnl-summary"
         return self._post(path, payload)
         
+    # TODO: COMBINE WITH PROFILER_ADDRESS_PNL_SUMMARY in the future
+    def pfl_address_pnl_summary(self, payloads: List[Dict]):
+        """Fetch PnL summary for array of addresses. Fixed number of pages for each address."""
+        all_results = []
+        for payload in payloads:
+            try:
+                data = self._post("/profiler/address/pnl-summary", payload)
+                # add address to each item in data
+                if "error" in data:
+                    print(f"Error in response for address {payload['address']}: {data['error']}")
+                    continue
+                data['address'] = payload['address']
+                all_results.append(data)
+            except Exception as e:
+                print(f"Error fetching PnL summary for address {payload['address']}: {e}")
+                continue
+        return all_results
