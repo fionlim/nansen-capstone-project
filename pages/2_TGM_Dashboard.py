@@ -67,5 +67,6 @@ with col1:
 # Update payload with widget values
 render_holders_donut_chart(chain, token, aggregate_by_entity)
 render_holder_flows_horizontal_bar_chart(chain, token, aggregate_by_entity)
+st.subheader('Holder PnL Bubble Chart')
 render_pnl_leaderboard_bubble_chart(chain, token)
 render_dex_trades_hourly(chain, token)
