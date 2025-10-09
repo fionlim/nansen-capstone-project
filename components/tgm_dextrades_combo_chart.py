@@ -5,7 +5,7 @@ from datetime import datetime as dt
 
 import plotly.graph_objects as go
 from nansen_client import NansenClient
-from dataframes import dex_trades_to_dataframe
+from dataframes import tgm_dex_trades_to_dataframe
 
 
 def render_dex_trades_hourly(chain: str, token_address: str):
@@ -46,13 +46,11 @@ def render_dex_trades_hourly(chain: str, token_address: str):
     }
     try:
         items = client.tgm_dex_trades(payload)
-        df = dex_trades_to_dataframe(items)
+        df = tgm_dex_trades_to_dataframe(items)
         if df.empty:
             st.warning("No DEX trades data returned for the selected filters.")
         else:
             st.subheader('DEX Trades Hourly Overview')
-            # Convert block_timestamp to datetime
-            df['block_timestamp'] = pd.to_datetime(df['block_timestamp'])
 
             # Filter for transactions in the last 24 hours
             latest_time = df['block_timestamp'].max()
