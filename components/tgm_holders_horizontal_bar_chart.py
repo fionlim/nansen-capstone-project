@@ -27,7 +27,6 @@ def render_holder_flows_horizontal_bar_chart(chain: str, token_address: str, agg
             "Fund",
             "90D Smart Trader",
             "180D Smart Trader", 
-            "Fund",
             "Smart Trader"
                 ],
             "ownership_percentage": {

@@ -17,7 +17,6 @@ if not st.user.is_logged_in:
         st.login()
     st.stop()
 
-st.set_page_config(page_title="TGM", layout="wide")
 st.title("TGM Dashboard")
 
 # --- Inputs ---

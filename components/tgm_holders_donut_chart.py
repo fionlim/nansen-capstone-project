@@ -22,7 +22,6 @@ def render_holders_donut_chart(chain: str, token_address: str, aggregate_by_enti
             "Fund",
             "90D Smart Trader",
             "180D Smart Trader", 
-            "Fund",
             "Smart Trader"
                 ],
             "ownership_percentage": {
