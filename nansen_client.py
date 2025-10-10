@@ -176,15 +176,9 @@ class NansenClient:
     
 
     # TODO: REMOVE THESE WHEN MERGED WITH ABOVE
-    def get_portfolio_history(self, payload: dict):
-        return self._post("/profiler/address/historical-balances", payload).get("data", [])
-
     def get_counterparties(self, payload: dict):
         return self._post("/profiler/address/counterparties", payload).get("data", [])
 
     def get_related_wallets(self, payload: dict):
         return self._post("/profiler/address/related-wallets", payload).get("data", [])
-
-    def get_pnl_summary(self, payload: dict):
-       return self._post("/profiler/address/pnl-summary", payload)
 
