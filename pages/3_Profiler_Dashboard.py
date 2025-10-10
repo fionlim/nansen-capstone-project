@@ -7,11 +7,14 @@ from datetime import date, datetime, timedelta, timezone
 from nansen_client import NansenClient
 
 # Chart components
+from components.pfl_portfolio_value_metrics import render_portfolio_value_metrics
 from components.pfl_portfolio_treemap import render_portfolio_treemap
 from components.pfl_token_share_stacked import render_token_share_stacked
 from components.pfl_volatility_heat_strip import render_volatility_heat_strip
+from components.pfl_portfolio_relations_metrics import render_portfolio_relations_metrics
 from components.pfl_counterparty_network import render_counterparty_network
 from components.pfl_related_wallet_network import render_related_wallet_network
+from components.pfl_portfolio_pnl_metrics import render_portfolio_pnl_metrics
 from components.pfl_token_pnl_waterfall import render_token_pnl_waterfall
 from components.pfl_roi_pnl_scatter import render_roi_pnl_scatter
 from components.pfl_transactions_log_hist import render_transactions_log_hist
@@ -19,6 +22,9 @@ from components.pfl_transactions_log_hist import render_transactions_log_hist
 
 # ----- start of nat's helper functions -----
 
+# TODO: Use the logic for reference for Top Token Concentration %, 30D Portfolio Growth %.
+#       Delete once done.
+   
 def get_portfolio_snapshot(address: str, start_date: str, end_date: str):
     """Fetch portfolio balance history and latest snapshot for a wallet."""
     payload = {
@@ -41,7 +47,6 @@ def get_portfolio_snapshot(address: str, start_date: str, end_date: str):
     num_tokens = len(snapshot)
 
     return snapshot, portfolio_value, num_tokens, history
-
 
 def plot_token_allocation(snapshot):
     """Pie chart of token allocation (>10% labeled)."""
@@ -69,10 +74,6 @@ def plot_portfolio_trend(history, range_option):
     ax.set_ylabel("USD Value")
     plt.xticks(rotation=45, ha="right")
     return fig
-
-
-    
-    # auth block
 
 # ----- end of nat's helper functions -----
 
@@ -153,10 +154,13 @@ def main():
 
     # ------------- Section 1 -------------
     st.header("Section 1: Identity & Portfolio Snapshot")
+    render_portfolio_value_metrics(client, wallet, chain_tx, from_iso, to_iso)
     render_portfolio_treemap(client, wallet, chain_all)
 
     # ------------- Section 2 -------------
     st.header("Section 2: Portfolio Trends & Stability (30 Days)")
+    # TODO: Add render function for Top Token Concentration % and 30D Portfolio Growth %
+
     c1, c2 = st.columns(2)
     with c1:
         render_token_share_stacked(client, wallet, chain_all, from_iso, to_iso)
@@ -165,6 +169,7 @@ def main():
 
     # ------------- Section 3 -------------
     st.header("Section 3: Interactions & Influence")
+    render_portfolio_relations_metrics(client, wallet, chain_tx, from_iso, to_iso)
     d1, d2 = st.columns(2)
     with d1:
         render_counterparty_network(client, wallet, chain_all, from_iso, to_iso)
@@ -173,6 +178,7 @@ def main():
 
     # ------------- Section 4 -------------
     st.header("Section 4: Tactical Trading Behaviour (30 Days)")
+    render_portfolio_pnl_metrics(client, wallet, chain_tx, from_iso, to_iso)
     e1, e2 = st.columns(2)
     with e1:
         render_token_pnl_waterfall(client, wallet, chain_all, from_iso, to_iso)
@@ -200,7 +206,9 @@ def main():
     # else:
     #     start_date = date(end_date.year, 1, 1)
 
-
+    # TODO: Use the logic for reference for Top Token Concentration %, 30D Portfolio Growth %, 
+    #       Top Counterparty Share %, Top Related Wallet Share %. Delete once done
+    
     if st.sidebar.button("Fetch Portfolio Snapshot"):
         with st.spinner("Fetching portfolio data..."):
             snapshot, portfolio_value, num_tokens, _ = get_portfolio_snapshot(
@@ -213,9 +221,6 @@ def main():
 
             # ---- Portfolio summary
             st.subheader("Portfolio Snapshot")
-            col1, col2 = st.columns(2)
-            col1.metric("Portfolio Value", f"${portfolio_value:,.2f}")
-            col2.metric("Number of Tokens Held", num_tokens)
 
             st.pyplot(plot_token_allocation(snapshot))
             #st.pyplot(plot_portfolio_trend(history, range_option))
@@ -255,24 +260,6 @@ def main():
                 )
             else:
                 st.info("No related wallets found.")
-
-            # ---- Trading Behaviour
-            st.subheader("Trading Behaviour (PnL Summary)")
-            payload_pnl = {
-                "address": wallet,
-                "chain": "ethereum",
-                "date": {"from": f"{from_iso}", "to": f"{to_iso}"},
-            }
-            data_pnl = client.get_pnl_summary(payload_pnl)
-
-            realized_pnl = data_pnl.get("realized_pnl_usd", 0)
-            win_rate = data_pnl.get("win_rate", 0)
-            roi_percent = data_pnl.get("realized_pnl_percent", 0)
-
-            col1, col2, col3 = st.columns(3)
-            col1.metric(f"Realized PnL", f"${realized_pnl:,.2f}")
-            col2.metric(f"Win Rate", f"{win_rate:.1f}%")
-            col3.metric(f"Avg ROI", f"{roi_percent:.2f}%")
 
     # ----- end of nat's block -----
 
