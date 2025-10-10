@@ -325,7 +325,6 @@ def pnl_leaderboard_to_dataframe(data: List[Dict]) -> pd.DataFrame:
 
 # ---------- Profiler ----------
 
-# TODO: use this for pfl_roi_pnl_scatter & pfl_token_pnl_waterfall components
 # profiler/address/pnl-summary
 def pnl_summary_to_dataframe(data: List[Dict]) -> pd.DataFrame:
     """
@@ -357,4 +356,110 @@ def pnl_summary_to_dataframe(data: List[Dict]) -> pd.DataFrame:
         }
         data_new.append(record_new)
     df = pd.DataFrame(data_new)
+    return df
+
+# TODO: use this for pfl_roi_pnl_scatter & pfl_token_pnl_waterfall components
+# profiler/address/pnl-summary
+def single_pnl_summary_to_dataframe(data: List[Dict]) -> pd.DataFrame:
+    if not data:
+        return pd.DataFrame(
+            columns=[
+                "top5_tokens",
+                "traded_token_count",
+                "traded_times",
+                "realised_pnl_usd",
+                "realized_pnl_percent",
+                "win_rate",
+            ]
+        )
+    top5_tokens = data.get("top5_tokens", [])
+    for token in top5_tokens:
+        for col in ["realized_pnl", "realized_roi"]:
+            if col in token:
+                try:
+                    token[col] = float(token[col])
+                except (TypeError, ValueError):
+                    token[col] = 0
+    data_flat = data.copy()
+    data_flat["top5_tokens"] = top5_tokens
+    
+    df = pd.DataFrame([data_flat])
+
+    numeric_cols = [
+        "traded_token_count",
+        "traded_times",
+        "realised_pnl_usd",
+        "realized_pnl_percent",
+        "win_rate",
+    ]
+    for col in numeric_cols:
+        if col in df.columns:
+            df[col] = pd.to_numeric(df[col], errors="coerce")
+    return df
+
+#profiler/address/historical-balances
+def historical_balances_to_dataframe(data: List[Dict]) -> pd.DataFrame:
+    if not data:
+        return pd.DataFrame(
+            columns=[
+                "block_timestamp",
+                "token_address",
+                "chain",
+                "token_amount",
+                "value_usd",
+                "token_symbol",
+            ]
+        )
+    df = pd.DataFrame(data)
+    if "block_timestamp" in df.columns:
+        df["block_timestamp"] = pd.to_datetime(df["block_timestamp"], errors="coerce")
+    numeric_cols = ["token_decimals", "balance", "value_usd"]
+    for col in numeric_cols:
+        if col in df.columns:
+            df[col] = pd.to_numeric(df[col], errors="coerce")
+    return df
+
+#profiler/address/counterparties
+def counterparties_to_dataframe(data: List[Dict]) -> pd.DataFrame:
+    if not data:
+        return pd.DataFrame(
+            columns=[
+                "counterparty_address",
+                "token_info",
+                "interaction_count",
+                "total_volume_usd",
+                "volume_in_usd",
+                "volume_out_usd",
+                "counterparty_address_label"
+            ]
+        )
+    df = pd.DataFrame(data)
+    numeric_cols = [
+        "interaction_count",
+        "total_volume_usd",
+        "volume_in_usd",
+        "volume_out_usd",
+    ]
+    for col in numeric_cols:
+        if col in df.columns:
+            df[col] = pd.to_numeric(df[col], errors="coerce")
+    return df
+
+#profiler/address/related-wallets
+def related_wallets_to_dataframe(data: List[Dict]) -> pd.DataFrame:
+    if not data:
+        return pd.DataFrame(
+            columns=[
+                "address",
+                "address_label",
+                "relation",
+                "transaction_hash",
+                "block_timestamp",
+                "order",
+                "chain"
+            ]
+        )
+    df = pd.DataFrame(data)
+    if "order" in df.columns:
+        df["order"] = pd.to_numeric(df["order"], errors="coerce")
     return df
