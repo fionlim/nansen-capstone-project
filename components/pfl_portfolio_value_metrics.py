@@ -14,7 +14,7 @@ def render_portfolio_value_metrics(client, wallet, chain_tx, from_iso, to_iso):
             "per_page": 100
         },
     }
-    data = client.profiler_address_historical_balances(payload=payload, fetch_all=False, n=1)
+    data = client.profiler_address_historical_balances(payload=payload, fetch_all=True)
     if not data:
         st.warning("No portfolio data found.")
         return

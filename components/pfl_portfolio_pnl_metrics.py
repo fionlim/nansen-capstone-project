@@ -10,7 +10,9 @@ def render_portfolio_pnl_metrics(client, wallet, chain_tx, from_iso, to_iso):
             "to": f"{to_iso}"
         },
     }
+
     data = client.profiler_address_pnl_summary(payload=payload)
+
     if not data:
         st.warning("No pnl data found.")
         return

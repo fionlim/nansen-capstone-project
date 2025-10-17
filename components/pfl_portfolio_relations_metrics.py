@@ -18,9 +18,10 @@ def render_portfolio_relations_metrics(client, wallet, chain_tx, from_iso, to_is
     rw_payload = {
         "address": wallet,
         "chain": chain_tx,
+        "pagination": {"page": 1, "per_page": 100}
     }
-    cp_data = client.profiler_address_counterparties(payload=cp_payload, fetch_all=False, n=1)
-    rw_data = client.profiler_address_related_wallets(payload=rw_payload, fetch_all=False, n=1)
+    cp_data = client.profiler_address_counterparties(payload=cp_payload, fetch_all=True)
+    rw_data = client.profiler_address_related_wallets(payload=rw_payload, fetch_all=True)
     if not cp_data:
         st.warning("No counterparty data found.")
         return
@@ -36,14 +37,27 @@ def render_portfolio_relations_metrics(client, wallet, chain_tx, from_iso, to_is
     if rw_df.empty:
         st.warning("No related wallet data found.")
 
-    # TODO: Add logic for Top Counterparty Share %, Top Related Wallet Share %
     num_cp = cp_df["counterparty_address"].nunique()
     num_rw = rw_df["address"].nunique()
 
-    # TODO: Add metric display for Top Counterparty Share %, Top Related Wallet Share %
+    top_cp_share = 0
+    if not cp_df.empty and "total_volume_usd" in cp_df.columns:
+        total_vol = cp_df["total_volume_usd"].sum()
+        top_cp_share = (cp_df["total_volume_usd"].max() / total_vol * 100) if total_vol > 0 else 0
+
+    top_rw_share = 0
+    if not rw_df.empty:
+        # count interactions per wallet
+        rw_counts = rw_df.groupby("address").size()
+        top_rw_share = (rw_counts.max() / rw_counts.sum() * 100) if rw_counts.sum() > 0 else 0
+
+
     col1, col2, col3, col4 = st.columns(4)
     with col1:
         st.metric(label="Number of Unique Counterparties", value=num_cp)
-
+    with col2:
+        st.metric(label="Top Counterparty Share %", value=f"{top_cp_share:.2f}%")
     with col3:
         st.metric(label="Number of Unique Related Wallets", value=num_rw)
+    with col4:
+        st.metric(label="Top Related Wallet Share %", value=f"{top_rw_share:.2f}%")

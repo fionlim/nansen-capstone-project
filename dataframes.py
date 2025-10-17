@@ -303,8 +303,8 @@ def pnl_leaderboard_to_dataframe(data: List[Dict]) -> pd.DataFrame:
                 "trader_address",
                 "trader_address_label",
                 "price_usd",
-                "pnl_usd_realised",
-                "pnl_usd_unrealised",
+                "pnl_usd_realized",
+                "pnl_usd_unrealized",
                 "holding_amount",
                 "holding_usd",
                 "max_balance_held",
@@ -313,8 +313,8 @@ def pnl_leaderboard_to_dataframe(data: List[Dict]) -> pd.DataFrame:
                 "netflow_amount_usd",
                 "netflow_amount",
                 "roi_percent_total",
-                "roi_percent_realised",
-                "roi_percent_unrealised",
+                "roi_percent_realized",
+                "roi_percent_unrealized",
                 "pnl_usd_total",
                 "nof_trades",
             ]
@@ -328,7 +328,7 @@ def pnl_leaderboard_to_dataframe(data: List[Dict]) -> pd.DataFrame:
 # profiler/address/pnl-summary
 def pnl_summary_to_dataframe(data: List[Dict]) -> pd.DataFrame:
     """
-    For now just get the traded_token_count, traded_times, realised_pnl_usd, realized_pnl_percent, and win_rate of the wallet
+    For now just get the traded_token_count, traded_times, realized_pnl_usd, realized_pnl_percent, and win_rate of the wallet
     """
     if not data:
         return pd.DataFrame(
@@ -336,7 +336,7 @@ def pnl_summary_to_dataframe(data: List[Dict]) -> pd.DataFrame:
                 "address",
                 "traded_token_count",
                 "traded_times",
-                "realised_pnl_usd",
+                "realized_pnl_usd",
                 "realized_pnl_percent",
                 "win_rate",
             ]
@@ -349,7 +349,7 @@ def pnl_summary_to_dataframe(data: List[Dict]) -> pd.DataFrame:
                 "address",
                 "traded_token_count",
                 "traded_times",
-                "realised_pnl_usd",
+                "realized_pnl_usd",
                 "realized_pnl_percent",
                 "win_rate",
             ]
@@ -360,14 +360,14 @@ def pnl_summary_to_dataframe(data: List[Dict]) -> pd.DataFrame:
 
 # TODO: use this for pfl_roi_pnl_scatter & pfl_token_pnl_waterfall components
 # profiler/address/pnl-summary
-def single_pnl_summary_to_dataframe(data: List[Dict]) -> pd.DataFrame:
+def single_pnl_summary_to_dataframe(data: Dict) -> pd.DataFrame:
     if not data:
         return pd.DataFrame(
             columns=[
                 "top5_tokens",
                 "traded_token_count",
                 "traded_times",
-                "realised_pnl_usd",
+                "realized_pnl_usd",
                 "realized_pnl_percent",
                 "win_rate",
             ]
@@ -375,20 +375,19 @@ def single_pnl_summary_to_dataframe(data: List[Dict]) -> pd.DataFrame:
     top5_tokens = data.get("top5_tokens", [])
     for token in top5_tokens:
         for col in ["realized_pnl", "realized_roi"]:
-            if col in token:
                 try:
                     token[col] = float(token[col])
                 except (TypeError, ValueError):
                     token[col] = 0
-    data_flat = data.copy()
-    data_flat["top5_tokens"] = top5_tokens
+    
+    data_flat = {**data, "top5_tokens": top5_tokens} #make shallow copy n flatten structure
     
     df = pd.DataFrame([data_flat])
 
     numeric_cols = [
         "traded_token_count",
         "traded_times",
-        "realised_pnl_usd",
+        "realized_pnl_usd",
         "realized_pnl_percent",
         "win_rate",
     ]
