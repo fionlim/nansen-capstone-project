@@ -1,19 +1,25 @@
 #!/usr/bin/env python3
 
 import streamlit as st
-from datetime import datetime, timedelta, timezone
-
+import pandas as pd
+import matplotlib.pyplot as plt
+from datetime import date, datetime, timedelta, timezone
 from nansen_client import NansenClient
 
 # Chart components
+from components.pfl_portfolio_value_metrics import render_portfolio_value_metrics
 from components.pfl_portfolio_treemap import render_portfolio_treemap
 from components.pfl_token_share_stacked import render_token_share_stacked
 from components.pfl_volatility_heat_strip import render_volatility_heat_strip
+from components.pfl_portfolio_relations_metrics import render_portfolio_relations_metrics
 from components.pfl_counterparty_network import render_counterparty_network
 from components.pfl_related_wallet_network import render_related_wallet_network
+from components.pfl_portfolio_pnl_metrics import render_portfolio_pnl_metrics
 from components.pfl_token_pnl_waterfall import render_token_pnl_waterfall
 from components.pfl_roi_pnl_scatter import render_roi_pnl_scatter
 from components.pfl_transactions_log_hist import render_transactions_log_hist
+from components.pfl_portfolio_trends_metrics import render_portfolio_trends_metrics
+
 
 CHAINS = ["all","ethereum","arbitrum","avalanche","base", "berachain", "blast", "bnb","goat", "hyperevm", "iotaevm", "linea", "mantle", "optimism","polygon","ronin", "sei", "scroll", "sonic", "unichain", "zksync", "solana", "bitcoin", "starknet", "ton", "tron"]
 TX_CHAINS = ["ethereum","arbitrum","avalanche","base", "berachain", "blast", "bnb","goat", "hyperevm", "iotaevm", "linea", "mantle", "optimism","polygon","ronin", "sei", "scroll", "sonic", "unichain", "zksync", "solana", "bitcoin", "starknet", "ton", "tron"]
@@ -89,10 +95,13 @@ def main():
 
     # ------------- Section 1 -------------
     st.header("Section 1: Identity & Portfolio Snapshot")
+    render_portfolio_value_metrics(client, wallet, chain_all, from_iso, to_iso)
     render_portfolio_treemap(client, wallet, chain_all)
 
     # ------------- Section 2 -------------
     st.header("Section 2: Portfolio Trends & Stability (30 Days)")
+    render_portfolio_trends_metrics(client, wallet, chain_all, from_iso, to_iso)
+
     c1, c2 = st.columns(2)
     with c1:
         render_token_share_stacked(client, wallet, chain_all, from_iso, to_iso)
@@ -101,6 +110,7 @@ def main():
 
     # ------------- Section 3 -------------
     st.header("Section 3: Interactions & Influence")
+    render_portfolio_relations_metrics(client, wallet, chain_all, chain_tx, from_iso, to_iso)
     d1, d2 = st.columns(2)
     with d1:
         render_counterparty_network(client, wallet, chain_all, from_iso, to_iso)
@@ -109,6 +119,7 @@ def main():
 
     # ------------- Section 4 -------------
     st.header("Section 4: Tactical Trading Behaviour (30 Days)")
+    render_portfolio_pnl_metrics(client, wallet, chain_all, from_iso, to_iso)
     e1, e2 = st.columns(2)
     with e1:
         render_token_pnl_waterfall(client, wallet, chain_all, from_iso, to_iso)
