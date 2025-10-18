@@ -1,10 +1,10 @@
 import streamlit as st
 from dataframes import counterparties_to_dataframe, related_wallets_to_dataframe
 
-def render_portfolio_relations_metrics(client, wallet, chain_tx, from_iso, to_iso):
+def render_portfolio_relations_metrics(client, wallet, chain_all, chain_tx, from_iso, to_iso):
     cp_payload = {
         "address": wallet,
-        "chain": chain_tx,
+        "chain": chain_all,
         "date": {
             "from": f"{from_iso}", 
             "to": f"{to_iso}"

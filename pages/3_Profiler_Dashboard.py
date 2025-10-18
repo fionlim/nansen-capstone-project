@@ -95,7 +95,7 @@ def main():
 
     # ------------- Section 1 -------------
     st.header("Section 1: Identity & Portfolio Snapshot")
-    render_portfolio_value_metrics(client, wallet, chain_tx, from_iso, to_iso)
+    render_portfolio_value_metrics(client, wallet, chain_all, from_iso, to_iso)
     render_portfolio_treemap(client, wallet, chain_all)
 
     # ------------- Section 2 -------------
@@ -110,7 +110,7 @@ def main():
 
     # ------------- Section 3 -------------
     st.header("Section 3: Interactions & Influence")
-    render_portfolio_relations_metrics(client, wallet, chain_tx, from_iso, to_iso)
+    render_portfolio_relations_metrics(client, wallet, chain_all, chain_tx, from_iso, to_iso)
     d1, d2 = st.columns(2)
     with d1:
         render_counterparty_network(client, wallet, chain_all, from_iso, to_iso)
@@ -119,7 +119,7 @@ def main():
 
     # ------------- Section 4 -------------
     st.header("Section 4: Tactical Trading Behaviour (30 Days)")
-    render_portfolio_pnl_metrics(client, wallet, chain_tx, from_iso, to_iso)
+    render_portfolio_pnl_metrics(client, wallet, chain_all, from_iso, to_iso)
     e1, e2 = st.columns(2)
     with e1:
         render_token_pnl_waterfall(client, wallet, chain_all, from_iso, to_iso)

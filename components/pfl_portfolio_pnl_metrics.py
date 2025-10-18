@@ -1,10 +1,10 @@
 import streamlit as st
 from dataframes import single_pnl_summary_to_dataframe
 
-def render_portfolio_pnl_metrics(client, wallet, chain_tx, from_iso, to_iso):
+def render_portfolio_pnl_metrics(client, wallet, chain_all, from_iso, to_iso):
     payload = {
         "address": wallet,
-        "chain": chain_tx,
+        "chain": chain_all,
         "date": {
             "from": f"{from_iso}", 
             "to": f"{to_iso}"
