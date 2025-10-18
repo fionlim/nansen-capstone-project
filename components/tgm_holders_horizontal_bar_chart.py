@@ -51,7 +51,7 @@ def render_holder_flows_horizontal_bar_chart(chain: str, token_address: str, agg
             "label_type": "all_holders",
             "pagination": {
                 "page": 1,
-                "per_page": 10
+                "per_page": 100
             },
             "filters": {
                 "include_smart_money_labels": [
@@ -78,7 +78,7 @@ def render_holder_flows_horizontal_bar_chart(chain: str, token_address: str, agg
                 }
             ]
         }
-        items = client.tgm_holders(payload)
+        items = client.tgm_holders(payload, fetch_all=True)
         df = holders_to_dataframe(items)
 
         if df.empty:

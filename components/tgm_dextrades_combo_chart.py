@@ -82,7 +82,7 @@ def render_dex_trades_hourly(chain: str, token_address: str):
             ]
         }
         try:
-            items = client.tgm_dex_trades(payload)
+            items = client.tgm_dex_trades(payload, fetch_all=True)
             df = tgm_dex_trades_to_dataframe(items)
             if df.empty:
                 st.warning("No DEX trades data returned for the selected filters.")

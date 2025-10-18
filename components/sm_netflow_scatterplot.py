@@ -9,7 +9,7 @@ def render_netflow_scatterplot(payload: Dict):
 
     try:
         client = NansenClient()
-        items = client.smart_money_netflow(payload, fetch_all=True, n=0)
+        items = client.smart_money_netflow(payload, fetch_all=True)
         df = net_flow_to_dataframe(items)
         if df.empty:
             st.warning("No net flow data returned for the selected filters.")

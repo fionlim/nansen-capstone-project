@@ -50,7 +50,7 @@ def render_pnl_leaderboard_bubble_chart(chain: str, token_address: str):
             },
             "pagination": {
                 "page": 1,
-                "per_page": 10
+                "per_page": 100
             },
             "filters": {
                 "holding_usd": {
@@ -69,7 +69,7 @@ def render_pnl_leaderboard_bubble_chart(chain: str, token_address: str):
         }
         try:
             leaderboard_items = client.tgm_pnl_leaderboard(payload)
-            leaderboard_df = pnl_leaderboard_to_dataframe(leaderboard_items).head(100)  # Limit to top 100 for performance
+            leaderboard_df = pnl_leaderboard_to_dataframe(leaderboard_items)  # Limit to top 100 for performance
 
             summary_payload = [{"chain": payload["chain"],
                             "address": trader_address,
