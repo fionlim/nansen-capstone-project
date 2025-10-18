@@ -173,12 +173,3 @@ class NansenClient:
                 print(f"Error fetching PnL summary for address {payload['address']}: {e}")
                 continue
         return all_results
-    
-
-    # TODO: REMOVE THESE WHEN MERGED WITH ABOVE
-    def get_counterparties(self, payload: dict):
-        return self._post("/profiler/address/counterparties", payload).get("data", [])
-
-    def get_related_wallets(self, payload: dict):
-        return self._post("/profiler/address/related-wallets", payload).get("data", [])
-
