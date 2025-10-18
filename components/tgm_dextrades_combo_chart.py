@@ -87,8 +87,6 @@ def render_dex_trades_hourly(chain: str, token_address: str):
             if df.empty:
                 st.warning("No DEX trades data returned for the selected filters.")
             else:
-                st.subheader('DEX Trades Hourly Overview')
-
                 # Filter for transactions in the last 24 hours
                 latest_time = df['block_timestamp'].max()
                 last_24h = latest_time - pd.Timedelta(hours=24)
