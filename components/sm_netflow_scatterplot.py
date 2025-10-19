@@ -24,7 +24,7 @@ def render_netflow_scatterplot(payload: Dict):
         with col6:
             col7, col8 = st.columns([2, 1])
             with col7:
-                selected_token = st.selectbox("", df['token_symbol'].unique(), index=0)
+                selected_token = st.selectbox("Select a token", df['token_symbol'].unique(), index=0, label_visibility="hidden")
             with col8:
                 st.markdown("<br>", unsafe_allow_html=True)
                 if st.button("Get Metrics", use_container_width=True):
