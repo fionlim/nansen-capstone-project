@@ -7,12 +7,13 @@ from nansen_client import NansenClient
 from dataframes import holders_to_dataframe
 
 def render_holders_donut_chart(chain: str, token_address: str, aggregate_by_entity: bool):
+    columns = [
+        "address", "address_label", "token_amount", "total_outflow", "total_inflow",
+        "balance_change_24h", "balance_change_7d", "balance_change_30d",
+        "ownership_percentage", "value_usd", "holder_type"
+    ]
+
     if not token_address or not chain:
-        columns = [
-            "address", "address_label", "token_amount", "total_outflow", "total_inflow",
-            "balance_change_24h", "balance_change_7d", "balance_change_30d",
-            "ownership_percentage", "value_usd", "holder_type"
-        ]
         columns_df = pd.DataFrame(columns=columns)
         st.dataframe(columns_df)
 
@@ -77,7 +78,42 @@ def render_holders_donut_chart(chain: str, token_address: str, aggregate_by_enti
             if df.empty:
                 st.warning("No holder distribution data returned for the selected filters.")
             else:
-                st.dataframe(df) 
+                df_display = df.copy()
+
+                num_cols = [
+                    "token_amount", "total_outflow", "total_inflow",
+                    "balance_change_24h", "balance_change_7d", "balance_change_30d",
+                    "ownership_percentage", "value_usd"
+                ]
+                for col in num_cols:
+                    df_display[col] = df_display[col].apply(lambda x: f"{x:,.2f}")
+
+                with st.expander("All Holders' Metrics", expanded=False):
+                    with st.container():
+                        st.markdown(
+                            f'<div style="overflow-y:auto;">',
+                            unsafe_allow_html=True
+                        )
+
+                        header_cols = st.columns([2, 2, 1, 1, 1, 1, 1, 1, 1, 1, 1])
+                        for i, col_name in enumerate(columns):
+                            with header_cols[i]:
+                                st.markdown(f"**{col_name.replace('_', ' ').title()}**", unsafe_allow_html=True)
+
+                        for idx, row in df_display.iterrows():
+                            row_cols = st.columns([2, 2, 1, 1, 1, 1, 1, 1, 1, 1, 1])
+                            for i, col_name in enumerate(columns):
+                                with row_cols[i]:
+                                    if col_name == "address":
+                                        if st.button(f"{row[col_name][:20]}... 🔍", key=f"{row[col_name]}_{idx}"):
+                                            st.session_state["selected_wallet"] = row["address"]
+                                            st.session_state["selected_wallet_label"] = row["address_label"]
+                                            st.switch_page("pages/3_Profiler_Dashboard.py")
+                                    else:
+                                        st.write(row[col_name])
+                        st.markdown("</div>", unsafe_allow_html=True)
+
+                #st.dataframe(df) 
                 st.subheader('Holder Distribution')
                 donut_cols = st.columns(3)
         
