@@ -20,19 +20,32 @@ if not st.user.is_logged_in:
 
 st.title("TGM Dashboard")
 
+# --- Check if User came from Landing Page ---
+prefilled_token = st.session_state.get("selected_token", "")
+if prefilled_token:
+    st.info(f"Auto-loaded token: {prefilled_token}")
+
 # --- Inputs ---
 c1, c2, c3, c4 = st.columns([2, 1, 1, 1])
 with c1:
     token = st.text_input(
-        "Token address", placeholder="0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48"
+        "Token address", 
+        value=prefilled_token,
+        placeholder="0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48"
     )
     token = token.strip().lower()
 with c2:
+    available_chains = ["ethereum", "solana", "arbitrum", "optimism", "base", "bnb", "polygon"]
+    if prefilled_token:
+        default_index = available_chains.index(st.session_state["chain"])
+    else:
+            default_index = 0
     chain = st.selectbox(
-        "Chain", ["ethereum", "arbitrum", "optimism", "base", "bnb", "polygon"], index=0
+        "Chain", available_chains, index=default_index
     )
+
 with c3:
-    period = st.selectbox("Period", ["1h", "24h", "7d", "30d"], index=0)
+    period = st.selectbox("Period", ["1h", "24h", "7d", "30d"], index=1)
 with c4:
     st.markdown("<br>", unsafe_allow_html=True)
     refresh_data = st.button("🔄 Refresh Metrics", use_container_width=True)
