@@ -12,7 +12,7 @@ def format_delta_color(delta_value):
     else:
         return "normal"
 
-
+@st.fragment
 def render_token_metrics(token_address: str, chain: str, period: str):
 
     st.subheader("Token Metrics")

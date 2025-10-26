@@ -6,6 +6,7 @@ import pandas as pd
 from nansen_client import NansenClient
 from dataframes import holders_to_dataframe
 
+@st.fragment
 def render_holders_donut_chart(chain: str, token_address: str, aggregate_by_entity: bool):
     if not token_address or not chain:
         columns = [
