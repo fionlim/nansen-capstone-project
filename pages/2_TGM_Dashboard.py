@@ -6,6 +6,7 @@ from components.tgm_pnl_leaderboard_bubble_chart import render_pnl_leaderboard_b
 from components.tgm_dextrades_combo_chart import render_dex_trades_hourly
 from components.tgm_token_metrics import render_token_metrics
 from components.sm_gauge import render_gauge_charts
+from components.llamaswap_iframe import render_llamaswap_iframe
 
 st.set_page_config(page_title="TGM Dashboard", layout="wide")
 st.title("TGM Dashboard")
@@ -72,3 +73,7 @@ render_pnl_leaderboard_bubble_chart(st.session_state.chain, st.session_state.tok
 
 st.subheader('DEX Trades Hourly Overview')
 render_dex_trades_hourly(st.session_state.chain, st.session_state.token)
+
+# --- Bottom layout: LlamaSwap Widget ---
+st.subheader('Swap via LlamaSwap')
+render_llamaswap_iframe(st.session_state.chain, st.session_state.token)
