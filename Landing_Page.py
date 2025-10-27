@@ -5,6 +5,7 @@ import streamlit as st
 from components.sm_netflow_scatterplot import render_netflow_scatterplot
 from components.sm_trade_value_podium import render_dex_trades_podium
 from components.sm_netflow_podium import render_netflow_podium
+from components.pfl_wallet_token_tracker import render_wallet_token_tracker
 
 
 def main():
@@ -169,5 +170,7 @@ def main():
     st.write("Time period: Past 24 hours")
     render_netflow_scatterplot(SCATTERPLOT_DEFAULT_PAYLOAD)
 
+    st.subheader("Starred Wallet Token Purchases")
+    render_wallet_token_tracker()
 if __name__ == "__main__":
     main()
