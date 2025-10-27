@@ -4,7 +4,7 @@ This project demonstrates how Nansen's API can help visualize onchain data revol
 
 ## Setup
 
-1. Refer to `.streamlit/secrets_example.toml` and create a `secrets.toml` file in the same directory.
+1. Refer to `.streamlit/secrets.toml.example` and create a `secrets.toml` file in the same directory.
 
 ```toml
 nansen_api_key = "your_api_key_here"
