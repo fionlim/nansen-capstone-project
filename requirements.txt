@@ -7,3 +7,5 @@ Authlib>=1.3.2
 matplotlib>=3.8.0
 numpy
 networkx
+streamlit_openai
+openai
