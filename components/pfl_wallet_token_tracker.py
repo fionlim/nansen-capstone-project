@@ -5,11 +5,17 @@ from datetime import datetime, timezone, timedelta
 from nansen_client import NansenClient
 from dataframes import pfl_transactions_to_dataframe, tgm_token_screener_to_dataframe
 
-def render_wallet_token_tracker(): #specify chain from outside filter
+def render_wallet_token_tracker(wallets: List): #specify chain from outside filter
 
     try:
         client = NansenClient()
-        starred_wallets = ["0x71597749c66df3dA4290d922f74A122E8D8406Ad", "0x4a0B7c07D837bB8b7FD4626255D5F437E4AcbBA3", "0x45cBe6d223F67F68a5e7960737Faf22999348f53"]
+
+        default_wallets = ["0x71597749c66df3dA4290d922f74A122E8D8406Ad", "0x4a0B7c07D837bB8b7FD4626255D5F437E4AcbBA3", "0x45cBe6d223F67F68a5e7960737Faf22999348f53"]
+        if wallets:
+            starred_wallets = wallets
+        else:
+            starred_wallets = default_wallets
+
         eth_swap_in_methods = ["swapExactTokensForTokens", "swapTokensForExactTokens",
                             "swapExactETHForTokens", "swapETHForExactTokens",
                             "swapExactTokensForTokensSupportingFeeOnTransferTokens",
