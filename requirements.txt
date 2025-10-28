@@ -9,3 +9,5 @@ numpy
 networkx
 streamlit_openai
 openai
+hyperliquid-python-sdk
+eth-account
