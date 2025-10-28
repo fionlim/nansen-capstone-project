@@ -5,6 +5,8 @@ import pandas as pd
 import matplotlib.pyplot as plt
 from datetime import date, datetime, timedelta, timezone
 from nansen_client import NansenClient
+from streamlit_javascript import st_javascript
+import streamlit.components.v1 as components
 
 # Chart components
 from components.pfl_portfolio_value_metrics import render_portfolio_value_metrics
@@ -56,7 +58,45 @@ def main():
     # Top-of-page filters
     # --------------------------
     default_wallet = "0xb284f19ffa703daadf6745d3c655f309d17370a5"
-    wallet = st.text_input("Wallet address", value=default_wallet, placeholder="0x...")
+    stored_wallet = st_javascript("localStorage.getItem('current_wallet') || ''")
+    if not stored_wallet:
+        wallet_value = default_wallet
+    else:
+        wallet_value = stored_wallet
+    wallet = st.text_input("Wallet address", value=wallet_value, placeholder="0x...")
+
+    st_javascript(f"localStorage.setItem('current_wallet', '{wallet}');")
+
+    starred_wallets = st_javascript("JSON.parse(localStorage.getItem('starred_wallets') || '[]');")
+    if not isinstance(starred_wallets, list):
+        st.info("Loading starred wallets...")
+        st.stop()
+    is_starred = wallet in starred_wallets
+
+    if not is_starred:
+        if st.button("Star Wallet"):
+            components.html(f"""
+                <script>
+                const wallet = "{wallet}";
+                let wallets = JSON.parse(localStorage.getItem("starred_wallets")) || [];
+                wallets.push(wallet);
+                localStorage.setItem("starred_wallets", JSON.stringify(wallets));
+                alert("Wallet added to your starred list!");
+                window.parent.location.reload();
+                </script>
+            """, height=0)
+    else:
+        if st.button("Unstar Wallet"):
+            components.html(f"""
+            <script>
+            const wallet = "{wallet}";
+            let wallets = JSON.parse(localStorage.getItem("starred_wallets")) || [];
+            wallets = wallets.filter(w => w !== wallet);
+            localStorage.setItem("starred_wallets", JSON.stringify(wallets));
+            alert("Wallet removed from starred list!");
+            window.parent.location.reload();
+            </script>
+            """, height=0)
 
     colA, colB = st.columns(2)
     with colA:
