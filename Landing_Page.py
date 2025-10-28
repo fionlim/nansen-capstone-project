@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 import json
 import streamlit as st
+from streamlit_javascript import st_javascript
 
 from components.sm_netflow_scatterplot import render_netflow_scatterplot
 from components.sm_trade_value_podium import render_dex_trades_podium
@@ -171,6 +172,10 @@ def main():
     render_netflow_scatterplot(SCATTERPLOT_DEFAULT_PAYLOAD)
 
     st.subheader("Starred Wallet Token Purchases")
-    render_wallet_token_tracker()
+    starred_wallets = st_javascript("JSON.parse(localStorage.getItem('starred_wallets') || '[]');")
+    if not isinstance(starred_wallets, list):
+        st.info("Loading starred wallets...")
+        st.stop()
+    render_wallet_token_tracker(starred_wallets)
 if __name__ == "__main__":
     main()
