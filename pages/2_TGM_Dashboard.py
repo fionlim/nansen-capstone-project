@@ -56,7 +56,7 @@ with st.form(key='input_form'):
         period = st.selectbox("Period", ["1h", "24h", "7d", "30d"], index=1, key="period")
     with c4:
         st.markdown("<br>", unsafe_allow_html=True)
-        refresh_data = st.button("🔄 Refresh Metrics", use_container_width=True)
+        submit = st.form_submit_button("🔄 Update Dashboard", use_container_width=True)
 
 # --- Top layout: Smart Money Gauges on left, Token metrics on right ---
 
