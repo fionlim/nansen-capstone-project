@@ -55,9 +55,20 @@ def main():
     # --------------------------
     # Top-of-page filters
     # --------------------------
-    default_wallet = "0xb284f19ffa703daadf6745d3c655f309d17370a5"
-    wallet = st.text_input("Wallet address", value=default_wallet, placeholder="0x...")
+    prefilled_wallet = st.session_state.get("selected_wallet", "")
+    prefilled_wallet_label = st.session_state.get("selected_wallet_label", "")
+    if prefilled_wallet:
+        st.info(f"Auto-loaded wallet address: {prefilled_wallet}, address label: {prefilled_wallet_label}")
+    else:
+        prefilled_wallet = "0xb284f19ffa703daadf6745d3c655f309d17370a5"
+        prefilled_wallet_label = ""
 
+    col1, col2 = st.columns(2)
+    with col1: 
+        wallet = st.text_input("Wallet address", value=prefilled_wallet, placeholder="0x...")
+    with col2:
+        st.text_input("Wallet label", value=prefilled_wallet_label)
+        
     colA, colB = st.columns(2)
     with colA:
         chain_all = st.selectbox("Portfolio/PNL Chains", CHAINS, index=0)
