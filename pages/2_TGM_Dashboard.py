@@ -28,23 +28,32 @@ if 'period' not in st.session_state:
 if 'aggregate_by_entity' not in st.session_state:
     st.session_state.aggregate_by_entity = False
 
+# --- Check if User came from Landing Page ---
+prefilled_token = st.session_state.get("selected_token", "")
+if prefilled_token:
+    st.info(f"Auto-loaded token: {prefilled_token}")
+
 # --- Inputs ---
 with st.form(key='input_form'):
     c1, c2, c3, c4 = st.columns([2, 1, 1, 1])
     with c1:
         token = st.text_input(
-            "Token address", placeholder="0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48",
+            "Token address", 
+            value=prefilled_token,
+            placeholder="0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48"
         )
         if not token:
             st.info("👆 Enter a token address above to see detailed metrics")
-
         st.session_state.token = token.strip().lower()
     with c2:
-        chain = st.selectbox(
-            "Chain", ["ethereum", "arbitrum", "optimism", "base", "bnb", "polygon"], index=0, key="chain"
-        )
+        available_chains = ["ethereum", "solana", "arbitrum", "optimism", "base", "bnb", "polygon"]
+        if prefilled_token:
+            default_index = available_chains.index(st.session_state["chain"])
+        else:
+            default_index = 0
+        chain = st.selectbox("Chain", available_chains, index=default_index, key="chain")
     with c3:
-        period = st.selectbox("Period", ["1h", "24h", "7d", "30d"], index=0, key="period")
+        period = st.selectbox("Period", ["1h", "24h", "7d", "30d"], index=1, key="period")
     with c4:
         st.markdown("<br>", unsafe_allow_html=True)
         submit = st.form_submit_button("🔄 Update Dashboard", use_container_width=True)

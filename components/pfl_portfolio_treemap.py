@@ -19,8 +19,38 @@ def _fetch_balances_df(client: NansenClient, address: str, chain_all: str, hide_
 
 @st.fragment
 def _treemap_fragment(df: pd.DataFrame, *, fragment_key: str = "pfl_portfolio_treemap_fragment"):
-    st.subheader("Top Holdings")
-    st.text("Box size = USD value; hover for $ and % of portfolio.")
+    col1, col2, col3 = st.columns([2, 1, 1])
+    with col1:
+        st.subheader("Top Holdings")
+        st.text("Box size = USD value; hover for $ and % of portfolio.")
+    with col2:
+        chain_selector_df = (
+            df.sort_values("value_usd", ascending=False)
+              .groupby("token_symbol", as_index=False)
+              .first()[["token_symbol", "chain", "value_usd"]]
+        )
+        token_options = [
+            f"{row['token_symbol']} ({row['chain']})"
+            for _, row in chain_selector_df.sort_values("value_usd", ascending=False).iterrows()
+        ]
+        selected_token_display = st.selectbox(
+            "Select token", 
+            token_options,
+            index=0,
+            label_visibility="hidden"
+        )
+    with col3:
+        st.markdown("<br>", unsafe_allow_html=True)
+        if st.button("Get Metrics", use_container_width=True):
+            selected_token_symbol = selected_token_display.split(" (")[0]
+            selected_chain = selected_token_display.split(" (")[1].replace(")", "")
+            token_row = df[
+                (df["token_symbol"] == selected_token_symbol) &
+                (df["chain"].str.lower() == selected_chain.lower())
+            ]            
+            st.session_state["selected_token"] = token_row["token_address"].iloc[0]
+            st.session_state["chain"] = selected_chain
+            st.switch_page("pages/2_TGM_Dashboard.py")
 
     # Stable radio inside the fragment, so only this fragment updates on toggle
     view_mode = st.radio(

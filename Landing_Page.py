@@ -72,7 +72,7 @@ def main():
                 "Min Token Market Cap (USD)",
                 min_value=0, value=1_000_000, step=100_000, format="%d"
             )
-            st.write(" ")         
+            st.markdown("<br>", unsafe_allow_html=True)
             submitted = st.button("Apply Filters")
         with col_max:
             max_market_cap = st.number_input(
@@ -166,7 +166,6 @@ def main():
     }
     st.divider()
     st.subheader("Token Netflow Distribution (Netflow > $5,000)")
-    st.write("Time period: Past 24 hours")
     render_netflow_scatterplot(SCATTERPLOT_DEFAULT_PAYLOAD)
 
 if __name__ == "__main__":
