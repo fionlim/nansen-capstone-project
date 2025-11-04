@@ -7,7 +7,7 @@ from dataframes import dex_trades_to_dataframe
 def render_dex_trades_podium(payload: Dict):
     try:
         client = NansenClient()
-        items = client.smart_money_dex_trades(payload=payload, fetch_all=False)
+        items = client.smart_money_dex_trades(payload=payload)
         df = dex_trades_to_dataframe(items)
         if df.empty:
             st.warning("No DEX trades data returned for the selected filters.")

@@ -8,7 +8,7 @@ def render_netflow_podium(payload: Dict):
 
     try:
         client = NansenClient()
-        items = client.smart_money_netflow(payload)
+        items = client.smart_money_netflow(payload=payload)
         df = net_flow_to_dataframe(items)
         if df.empty:
             st.warning("No net flow data returned for the selected filters.")
