@@ -7,6 +7,7 @@ import plotly.graph_objects as go
 from nansen_client import NansenClient
 from dataframes import pnl_leaderboard_to_dataframe, pnl_summary_to_dataframe
 
+@st.fragment
 def render_pnl_leaderboard_bubble_chart(chain: str, token_address: str):
     if not token_address or not chain:
 
