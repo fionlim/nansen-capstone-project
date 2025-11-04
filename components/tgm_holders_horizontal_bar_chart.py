@@ -6,6 +6,7 @@ from dataframes import holders_to_dataframe
 import pandas as pd
 import plotly.graph_objects as go
 
+@st.fragment
 def render_holder_flows_horizontal_bar_chart(chain: str, token_address: str, aggregate_by_entity: bool):
     """
     Render a centered horizontal bar chart with inflow (green, right) and outflow (red, left) by holder_type.
