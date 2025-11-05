@@ -7,7 +7,7 @@ import plotly.graph_objects as go
 from nansen_client import NansenClient
 from dataframes import tgm_dex_trades_to_dataframe
 
-
+@st.fragment
 def render_dex_trades_hourly(chain: str, token_address: str):
     if not token_address or not chain:
         hours = list(range(24))

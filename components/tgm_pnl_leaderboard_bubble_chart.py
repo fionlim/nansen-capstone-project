@@ -7,6 +7,7 @@ import plotly.graph_objects as go
 from nansen_client import NansenClient
 from dataframes import pnl_leaderboard_to_dataframe, pnl_summary_to_dataframe
 
+@st.fragment
 def render_pnl_leaderboard_bubble_chart(chain: str, token_address: str):
     if not token_address or not chain:
 
@@ -81,6 +82,28 @@ def render_pnl_leaderboard_bubble_chart(chain: str, token_address: str):
             if df.empty:
                 st.warning("No PnL data returned for the selected filters.")
             else:
+                col1, col2, col3 = st.columns([3, 2, 1])
+                df_display = df.dropna(subset=['pnl_usd_realised', 'pnl_usd_unrealised', 'trader_address_label'])
+                
+                with col1:
+                    st.write('Holder PnL Bubble Chart (Log Scale)')
+
+                with col2:
+                    selected_label = st.selectbox(
+                        "Select wallet", 
+                        df_display['trader_address_label'].fillna("Unknown").unique(),
+                        index=0,
+                        label_visibility="hidden"
+                    )
+                    
+                with col3:
+                    st.markdown("<br>", unsafe_allow_html=True)
+                    if st.button("Go to Profile", use_container_width=True):
+                        wallet_row = df_display[df_display['trader_address_label'] == selected_label].iloc[0]
+                        st.session_state["selected_wallet"] = wallet_row['trader_address']
+                        st.session_state["selected_wallet_label"] = wallet_row['trader_address_label']
+                        st.switch_page("pages/3_Profiler_Dashboard.py")
+
                 # Create bubble chart
                 fig = px.scatter(
                     df, 
@@ -93,7 +116,6 @@ def render_pnl_leaderboard_bubble_chart(chain: str, token_address: str):
                     log_x=True,
                     log_y=True,
                     size_max=60,
-                    title='Holder PnL Bubble Chart (Log Scale)'
                 )
                 fig.update_layout(
                     xaxis_title='PnL Realized(USD)',

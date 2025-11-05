@@ -57,46 +57,25 @@ def main():
     # --------------------------
     # Top-of-page filters
     # --------------------------
-    default_wallet = "0xb284f19ffa703daadf6745d3c655f309d17370a5"
-    stored_wallet = st_javascript("localStorage.getItem('current_wallet') || ''")
-    if not stored_wallet:
-        wallet_value = default_wallet
-    else:
-        wallet_value = stored_wallet
-    wallet = st.text_input("Wallet address", value=wallet_value, placeholder="0x...")
-
-    st_javascript(f"localStorage.setItem('current_wallet', '{wallet}');")
-
     starred_wallets = st_javascript("JSON.parse(localStorage.getItem('starred_wallets') || '[]');")
+    prefilled_wallet = st.session_state.get("selected_wallet", "")
+    prefilled_wallet_label = st.session_state.get("selected_wallet_label", "")
+    if prefilled_wallet:
+        st.info(f"Auto-loaded wallet address: {prefilled_wallet}, address label: {prefilled_wallet_label}")
+    else:
+        prefilled_wallet = "0xb284f19ffa703daadf6745d3c655f309d17370a5"
+        prefilled_wallet_label = ""
+
+    col1, col2 = st.columns(2)
+    with col1: 
+        wallet = st.text_input("Wallet address", value=prefilled_wallet, placeholder="0x...")
+    with col2:
+        st.text_input("Wallet label", value=prefilled_wallet_label)
+
     if not isinstance(starred_wallets, list):
         st.info("Loading starred wallets...")
         st.stop()
     is_starred = wallet in starred_wallets
-
-    if not is_starred:
-        if st.button("Star Wallet"):
-            components.html(f"""
-                <script>
-                const wallet = "{wallet}";
-                let wallets = JSON.parse(localStorage.getItem("starred_wallets")) || [];
-                wallets.push(wallet);
-                localStorage.setItem("starred_wallets", JSON.stringify(wallets));
-                alert("Wallet added to your starred list!");
-                window.parent.location.reload();
-                </script>
-            """, height=0)
-    else:
-        if st.button("Unstar Wallet"):
-            components.html(f"""
-            <script>
-            const wallet = "{wallet}";
-            let wallets = JSON.parse(localStorage.getItem("starred_wallets")) || [];
-            wallets = wallets.filter(w => w !== wallet);
-            localStorage.setItem("starred_wallets", JSON.stringify(wallets));
-            alert("Wallet removed from starred list!");
-            window.parent.location.reload();
-            </script>
-            """, height=0)
 
     colA, colB = st.columns(2)
     with colA:
@@ -117,10 +96,35 @@ def main():
     if "profiler_loaded" not in st.session_state:
         st.session_state.profiler_loaded = False
 
-    load_col, reset_col = st.columns([1, 1])
+    load_col, star_col, reset_col = st.columns([1, 1, 2])
     with load_col:
         if st.button("Load Profiler"):
             st.session_state.profiler_loaded = True
+    with star_col:
+        if not is_starred:
+            if st.button("Star Wallet"):
+                components.html(f"""
+                    <script>
+                    const wallet = "{wallet}";
+                    let wallets = JSON.parse(localStorage.getItem("starred_wallets")) || [];
+                    wallets.push(wallet);
+                    localStorage.setItem("starred_wallets", JSON.stringify(wallets));
+                    alert("Wallet added to your starred list!");
+                    window.parent.location.reload();
+                    </script>
+                """, height=0)
+        else:
+            if st.button("Unstar Wallet"):
+                components.html(f"""
+                <script>
+                const wallet = "{wallet}";
+                let wallets = JSON.parse(localStorage.getItem("starred_wallets")) || [];
+                wallets = wallets.filter(w => w !== wallet);
+                localStorage.setItem("starred_wallets", JSON.stringify(wallets));
+                alert("Wallet removed from starred list!");
+                window.parent.location.reload();
+                </script>
+                """, height=0)
     with reset_col:
         if st.button("Reset"):
             st.session_state.profiler_loaded = False
