@@ -5,6 +5,8 @@ import pandas as pd
 import matplotlib.pyplot as plt
 from datetime import date, datetime, timedelta, timezone
 from nansen_client import NansenClient
+from streamlit_javascript import st_javascript
+import streamlit.components.v1 as components
 
 # Chart components
 from components.pfl_portfolio_value_metrics import render_portfolio_value_metrics
@@ -55,6 +57,7 @@ def main():
     # --------------------------
     # Top-of-page filters
     # --------------------------
+    starred_wallets = st_javascript("JSON.parse(localStorage.getItem('starred_wallets') || '[]');")
     prefilled_wallet = st.session_state.get("selected_wallet", "")
     prefilled_wallet_label = st.session_state.get("selected_wallet_label", "")
     if prefilled_wallet:
@@ -68,7 +71,12 @@ def main():
         wallet = st.text_input("Wallet address", value=prefilled_wallet, placeholder="0x...")
     with col2:
         st.text_input("Wallet label", value=prefilled_wallet_label)
-        
+
+    if not isinstance(starred_wallets, list):
+        st.info("Loading starred wallets...")
+        st.stop()
+    is_starred = wallet in starred_wallets
+
     colA, colB = st.columns(2)
     with colA:
         chain_all = st.selectbox("Portfolio/PNL Chains", CHAINS, index=0)
@@ -88,10 +96,35 @@ def main():
     if "profiler_loaded" not in st.session_state:
         st.session_state.profiler_loaded = False
 
-    load_col, reset_col = st.columns([1, 1])
+    load_col, star_col, reset_col = st.columns([1, 1, 2])
     with load_col:
         if st.button("Load Profiler"):
             st.session_state.profiler_loaded = True
+    with star_col:
+        if not is_starred:
+            if st.button("Star Wallet"):
+                components.html(f"""
+                    <script>
+                    const wallet = "{wallet}";
+                    let wallets = JSON.parse(localStorage.getItem("starred_wallets")) || [];
+                    wallets.push(wallet);
+                    localStorage.setItem("starred_wallets", JSON.stringify(wallets));
+                    alert("Wallet added to your starred list!");
+                    window.parent.location.reload();
+                    </script>
+                """, height=0)
+        else:
+            if st.button("Unstar Wallet"):
+                components.html(f"""
+                <script>
+                const wallet = "{wallet}";
+                let wallets = JSON.parse(localStorage.getItem("starred_wallets")) || [];
+                wallets = wallets.filter(w => w !== wallet);
+                localStorage.setItem("starred_wallets", JSON.stringify(wallets));
+                alert("Wallet removed from starred list!");
+                window.parent.location.reload();
+                </script>
+                """, height=0)
     with reset_col:
         if st.button("Reset"):
             st.session_state.profiler_loaded = False
