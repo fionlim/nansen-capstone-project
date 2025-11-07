@@ -1,6 +1,10 @@
 from typing import Dict, Any, Optional, List, Tuple, Callable
 
-from lib.hyperliquid_sdk import fetch_balances_and_positions
+from lib.hyperliquid_sdk import (
+    fetch_balances_and_positions,
+    get_available_trading_pairs,
+    get_leverage,
+)
 
 
 def get_hyperliquid_tools() -> Tuple[List[Dict[str, Any]], Dict[str, Callable]]:
@@ -13,15 +17,12 @@ def get_hyperliquid_tools() -> Tuple[List[Dict[str, Any]], Dict[str, Callable]]:
             - handler_registry: Dict mapping function names to handler functions
     """
 
-    # ============================================================================
-    # FETCH/QUERY FUNCTIONS
-    # ============================================================================
-
-    def fetch_balances_handler() -> Dict[str, Any]:
-        """Handler for fetching balances and positions."""
-        return fetch_balances_and_positions()
-
     tools = [
+
+        # ============================================================================
+        # FETCH/QUERY FUNCTIONS
+        # ============================================================================
+
         {
             "type": "function",
             "function": {
@@ -30,11 +31,38 @@ def get_hyperliquid_tools() -> Tuple[List[Dict[str, Any]], Dict[str, Callable]]:
                 "parameters": {"type": "object", "properties": {}, "required": []},
             },
         },
+        {
+            "type": "function",
+            "function": {
+                "name": "get_available_trading_pairs",
+                "description": "Get all available trading pairs (perpetuals and spot) from Hyperliquid. Returns list with type field indicating 'perp' or 'spot'.",
+                "parameters": {"type": "object", "properties": {}, "required": []},
+            },
+        },
+        {
+            "type": "function",
+            "function": {
+                "name": "get_leverage",
+                "description": "Get the current leverage for a specific coin. Only works if there is an open position for the coin. Returns leverage type (cross/isolated), value, position size, and margin used.",
+                "parameters": {
+                    "type": "object", 
+                    "properties": {
+                        "coin": {
+                            "type": "string",
+                            "description": "The trading pair symbol (e.g., 'ETH', 'BTC').",
+                        },
+                    },
+                    "required": ["coin"],
+                },
+            },
+        },
     ]
     
     # Build handler registry mapping function names to handlers
     handler_registry = {
-        "fetch_balances_positions": fetch_balances_handler,
+        "fetch_balances_positions": fetch_balances_and_positions,
+        "get_available_trading_pairs": get_available_trading_pairs,
+        "get_leverage": get_leverage,
     }
 
     return tools, handler_registry

@@ -105,3 +105,124 @@ def fetch_balances_and_positions() -> Dict[str, Any]:
             "status": "error",
             "error": str(e),
         }
+
+
+def get_available_trading_pairs() -> Dict[str, Any]:
+    """
+    Get all available trading pairs (perpetuals and spot) from Hyperliquid.
+
+    Returns:
+        dict: Combined list of trading pairs with type field
+    """
+    try:
+        _, info, _ = get_hyperliquid_setup()
+
+        trading_pairs = []
+
+        # Get perpetual coins
+        perp_meta = info.meta(dex="")
+        for asset_info in perp_meta.get("universe", []):
+            trading_pairs.append(
+                {
+                    "name": asset_info.get("name", ""),
+                    "type": "perp",
+                    "sz_decimals": asset_info.get("szDecimals", 0),
+                    "max_leverage": asset_info.get("maxLeverage"),
+                    "only_isolated": asset_info.get("onlyIsolated", False),
+                }
+            )
+
+        # Get spot trading pairs
+        spot_meta = info.spot_meta()
+        tokens_dict = spot_meta.get("tokens", {})
+        # Handle both dict and list format for tokens
+        if isinstance(tokens_dict, list):
+            tokens_dict = {str(i): token for i, token in enumerate(tokens_dict)}
+        for spot_info in spot_meta.get("universe", []):
+            base_idx, quote_idx = spot_info.get("tokens", [0, 0])
+            base_token = tokens_dict.get(str(base_idx), {}) or {}
+            quote_token = tokens_dict.get(str(quote_idx), {}) or {}
+
+            # Build display name like "ETH/USDC"
+            display_name = (
+                f'{base_token.get("name", "")}/{quote_token.get("name", "")}'
+                if base_token.get("name") and quote_token.get("name")
+                else spot_info.get("name", "")
+            )
+
+            trading_pairs.append(
+                {
+                    "name": spot_info.get("name", ""),
+                    "display_name": display_name,
+                    "type": "spot",
+                    "base_token": base_token.get("name", ""),
+                    "quote_token": quote_token.get("name", ""),
+                    "sz_decimals": base_token.get("szDecimals", 0),
+                    "is_canonical": spot_info.get("isCanonical", False),
+                }
+            )
+
+        return {
+            "status": "success",
+            "trading_pairs": trading_pairs,
+            "total_perp": sum(1 for p in trading_pairs if p["type"] == "perp"),
+            "total_spot": sum(1 for p in trading_pairs if p["type"] == "spot"),
+        }
+    except Exception as e:
+        return {
+            "status": "error",
+            "error": str(e),
+        }
+
+
+def get_leverage(coin: str) -> Dict[str, Any]:
+    """
+    Get the current leverage for a specific coin, only works if there is an open position.
+
+    Args:
+        coin: Trading pair (e.g., "ETH", "BTC")
+
+    Returns:
+        dict: Leverage information (type, value, display, raw_usd) of open position of the coin
+    """
+    try:
+        address, info, _ = get_hyperliquid_setup()
+
+        user_state = info.user_state(address)
+
+        # Find position for the specified coin
+        for asset_position in user_state.get("assetPositions", []):
+            position = asset_position.get("position", {})
+            if position.get("coin") == coin:
+                leverage_info = position.get("leverage", {})
+                leverage_type = leverage_info.get("type", "cross")
+                leverage_value = leverage_info.get("value", 0)
+                raw_usd = leverage_info.get("rawUsd")  # Only for isolated
+
+                return {
+                    "status": "success",
+                    "coin": coin,
+                    "leverage": {
+                        "type": leverage_type,
+                        "value": leverage_value,
+                        "display": f"{leverage_value}x",
+                        "raw_usd": float(raw_usd) if raw_usd is not None else None,
+                    },
+                    "position_size": float(position.get("szi", 0)),
+                    "margin_used": float(position.get("marginUsed", 0)),
+                }
+
+        # No position found for this coin
+        return {
+            "status": "error",
+            "error": f"No open position found for {coin}",
+            "coin": coin,
+        }
+    except Exception as e:
+        return {
+            "status": "error",
+            "error": str(e),
+            "coin": coin,
+        }
+
+
