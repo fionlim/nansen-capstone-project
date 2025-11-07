@@ -174,5 +174,18 @@ def render_counterparty_network(client: NansenClient, address: str, chain_all: s
         )
         st.plotly_chart(fig, width='stretch')
 
+        counterparty_options = df["label"].tolist()
+        col1, col2 = st.columns(2)
+        with col1:
+            selected_label = st.selectbox("Select a counterparty to view in Profiler", counterparty_options)
+        with col2:
+            st.markdown("<br>", unsafe_allow_html=True)
+            if st.button("View Profile", key=f"counterparty_{selected_label}"):
+                selected_row = df.loc[df["label"] == selected_label].iloc[0]
+                selected_address = selected_row["counterparty_address"]
+
+                st.session_state["selected_wallet"] = selected_address
+                st.session_state["selected_wallet_label"] = selected_label
+                st.rerun()
     except Exception as e:
         st.error(f"Failed to load Counterparties Network: {e}")

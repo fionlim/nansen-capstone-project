@@ -24,12 +24,46 @@ def render_llamaswap_iframe(chain: str, token: str):
     # Build LlamaSwap URL
     llama_swap_url = f"https://swap.defillama.com/?chain={swap_chain}&from={default_from_token}&to={to_token}"
     
-    # Center the iframe using columns
-    left, mid, right = st.columns([1, 2, 1])
-    with mid:
-        components.iframe(
-            llama_swap_url, 
-            width=450, 
-            height=750, 
-            scrolling=True
+    # Create containers for CSS and iframe
+    css_container, iframe_container = st.container(), st.container()
+    
+    # Apply CSS in separate container to avoid adding empty space
+    with css_container:
+        st.markdown(
+            """
+            <style>
+            .st-key-LLAMASWAP_WIDGET [data-testid="stMarkdownContainer"] iframe {
+                margin-left: auto;
+                margin-right: auto;
+                display: block;
+            }
+            .st-key-LLAMASWAP_WIDGET [data-testid="stMarkdownContainer"] {
+                display: flex;
+                justify-content: center;
+            }
+            </style>
+            """,
+            unsafe_allow_html=True
         )
+    
+    # Render iframe as widget
+    with iframe_container:
+        with st.container(key='LLAMASWAP_WIDGET'):
+            st.markdown(
+                f"""
+                <iframe
+                    title="LlamaSwap Widget"
+                    name="LlamaSwap Widget"
+                    src="{llama_swap_url}"
+                    width="450px"
+                    height="750px"
+                    allow="fullscreen"
+                    marginwidth="0"
+                    marginheight="0"
+                    frameborder="0"
+                    scrolling="yes"
+                    loading="eager"
+                ></iframe>
+                """,
+                unsafe_allow_html=True
+            )

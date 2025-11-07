@@ -6,6 +6,9 @@ import plotly.graph_objects as go
 import numpy as np
 
 def render_netflow_scatterplot(payload: Dict):
+    col5, col6 = st.columns(2)
+    with col5:
+        st.write("Time period: Past 24 hours")
 
     try:
         client = NansenClient()
@@ -14,6 +17,20 @@ def render_netflow_scatterplot(payload: Dict):
         if df.empty:
             st.warning("No net flow data returned for the selected filters.")
             return
+        
+        df = df[df["net_flow_24h_usd"].abs() > 5000]
+        df = df.sort_values(by="net_flow_24h_usd", key=lambda x: x.abs(), ascending=False).reset_index(drop=True)
+
+        with col6:
+            col7, col8 = st.columns([2, 1])
+            with col7:
+                selected_token = st.selectbox("Select a token", df['token_symbol'].unique(), index=0, label_visibility="hidden")
+            with col8:
+                st.markdown("<br>", unsafe_allow_html=True)
+                if st.button("Get Metrics", width='stretch'):
+                    st.session_state["selected_token"] = df.loc[df["token_symbol"] == selected_token, "token_address"].iloc[0]
+                    st.session_state["chain"] = df.loc[df["token_symbol"] == selected_token, "chain"].iloc[0]
+                    st.switch_page("pages/2_TGM_Dashboard.py")
 
         chains = df['chain'].unique()
         fig = go.Figure()
@@ -21,9 +38,6 @@ def render_netflow_scatterplot(payload: Dict):
         colors = ['rgba(0,100,200,0.5)', 'rgba(0,180,0,0.5)', 'rgba(255,140,0,0.5)']
         for i, chain in enumerate(chains):
             chain_df = df[df['chain'] == chain]
-
-            chain_df = chain_df[chain_df['net_flow_24h_usd'].abs() > 5000]
-            chain_df = chain_df.reindex(chain_df['net_flow_24h_usd'].abs().sort_values(ascending=False).index)
             n = len(chain_df)
 
             column_width = 0.3
@@ -61,7 +75,8 @@ def render_netflow_scatterplot(payload: Dict):
                 showline=True
             ),
             showlegend=False,
-            height=500
+            height=500,
+            margin=dict(t=40)
         )
 
         st.plotly_chart(fig, width='stretch')
