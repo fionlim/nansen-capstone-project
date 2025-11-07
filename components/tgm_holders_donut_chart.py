@@ -23,15 +23,15 @@ def render_holders_donut_chart(chain: str, token_address: str, aggregate_by_enti
 
         fig1 = px.pie(names=labels, values=values, hole=0.5,
                     title='Unique Addresses by Label')
-        donut_cols[0].plotly_chart(fig1, use_container_width=True)
+        donut_cols[0].plotly_chart(fig1, width='stretch')
 
         fig2 = px.pie(names=labels, values=values, hole=0.5,
                     title='Aggregated Token Amount by Label')
-        donut_cols[1].plotly_chart(fig2, use_container_width=True)
+        donut_cols[1].plotly_chart(fig2, width='stretch')
 
         fig3 = px.pie(names=labels, values=values, hole=0.5,
                     title='Aggregated Total Inflow by Label')
-        donut_cols[2].plotly_chart(fig3, use_container_width=True)
+        donut_cols[2].plotly_chart(fig3, width='stretch')
     
     else:
         client = NansenClient()
@@ -86,19 +86,19 @@ def render_holders_donut_chart(chain: str, token_address: str, aggregate_by_enti
                 address_counts = df.groupby('holder_type')['address'].nunique().reset_index()
                 fig1 = px.pie(address_counts, names='holder_type', values='address', hole=0.5,
                             title='Unique Addresses by Label')
-                donut_cols[0].plotly_chart(fig1, use_container_width=True)
+                donut_cols[0].plotly_chart(fig1, width='stretch')
 
                 # 2. Aggregated token_amount by label
                 token_amounts = df.groupby('holder_type')['token_amount'].sum().reset_index()
                 fig2 = px.pie(token_amounts, names='holder_type', values='token_amount', hole=0.5,
                             title='Aggregated Token Amount by Label')
-                donut_cols[1].plotly_chart(fig2, use_container_width=True)
+                donut_cols[1].plotly_chart(fig2, width='stretch')
 
                 # 3. Aggregated total_inflow by label
                 inflows = df.groupby('holder_type')['total_inflow'].sum().reset_index()
                 fig3 = px.pie(inflows, names='holder_type', values='total_inflow', hole=0.5,
                             title='Aggregated Total Inflow by Label')
-                donut_cols[2].plotly_chart(fig3, use_container_width=True)
+                donut_cols[2].plotly_chart(fig3, width='stretch')
         except requests.exceptions.HTTPError as http_err:
             st.error(f"Failed to fetch holder distribution data: {http_err}")
         except Exception as e:

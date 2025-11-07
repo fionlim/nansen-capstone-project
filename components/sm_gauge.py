@@ -120,7 +120,7 @@ def render_gauge_charts(token_address: str, chain: str, period: str):
         )
     )
     fig1.update_layout(height=250, margin=dict(l=10, r=10, t=30, b=20))
-    st.plotly_chart(fig1, use_container_width=True, key="gauge1")
+    st.plotly_chart(fig1, width='stretch', key="gauge1")
     
     if has_data:
         st.caption(
@@ -143,7 +143,7 @@ def render_gauge_charts(token_address: str, chain: str, period: str):
         )
     )
     fig2.update_layout(height=250, margin=dict(l=10, r=10, t=30, b=20))
-    st.plotly_chart(fig2, use_container_width=True, key="gauge2")
+    st.plotly_chart(fig2, width='stretch', key="gauge2")
     
     if has_data:
         st.caption(

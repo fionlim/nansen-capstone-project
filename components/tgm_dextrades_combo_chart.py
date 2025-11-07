@@ -43,7 +43,7 @@ def render_dex_trades_hourly(chain: str, token_address: str):
             template='plotly_white'
         )
 
-        st.plotly_chart(fig, use_container_width=True)
+        st.plotly_chart(fig, width='stretch')
 
     else:
         client = NansenClient()
@@ -139,7 +139,7 @@ def render_dex_trades_hourly(chain: str, token_address: str):
                     bargap=0.2,
                     template='plotly_white'
                 )
-                st.plotly_chart(fig, use_container_width=True)
+                st.plotly_chart(fig, width='stretch')
                 
         except Exception as e:
             st.error(f"Unexpected error: {e}" )

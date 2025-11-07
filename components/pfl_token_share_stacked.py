@@ -53,7 +53,7 @@ def render_token_share_stacked(client: NansenClient, address: str, chain_all: st
             legend_title_text="Token",
             margin=dict(t=30, l=10, r=10, b=10),
         )
-        st.plotly_chart(fig, use_container_width=True)
+        st.plotly_chart(fig, width='stretch')
 
     except Exception as e:
         st.error(f"Failed to load Token Share Over Time: {e}")

@@ -36,7 +36,7 @@ def render_pnl_leaderboard_bubble_chart(chain: str, token_address: str):
             template='plotly_white'
         )
 
-        st.plotly_chart(fig, use_container_width=True)
+        st.plotly_chart(fig, width='stretch')
 
     else:
         client = NansenClient()
@@ -102,7 +102,7 @@ def render_pnl_leaderboard_bubble_chart(chain: str, token_address: str):
                     legend_title='Holder Type',
                     template='plotly_white'
                 )
-                st.plotly_chart(fig, use_container_width=True)
+                st.plotly_chart(fig, width='stretch')
 
         except Exception as e:
             st.error(f"Unexpected error: {e}" )

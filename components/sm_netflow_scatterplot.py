@@ -64,6 +64,6 @@ def render_netflow_scatterplot(payload: Dict):
             height=500
         )
 
-        st.plotly_chart(fig, use_container_width=True)
+        st.plotly_chart(fig, width='stretch')
     except Exception as e:
         st.error(f"Unexpected error: {e}")

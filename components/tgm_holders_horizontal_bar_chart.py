@@ -41,7 +41,7 @@ def render_holder_flows_horizontal_bar_chart(chain: str, token_address: str, agg
             showlegend=True,
             xaxis=dict(zeroline=True, zerolinewidth=2, zerolinecolor='gray')
         )
-        st.plotly_chart(fig, use_container_width=True)
+        st.plotly_chart(fig, width='stretch')
 
     else:
         client = NansenClient()
@@ -117,5 +117,5 @@ def render_holder_flows_horizontal_bar_chart(chain: str, token_address: str, agg
             showlegend=True,
             xaxis=dict(zeroline=True, zerolinewidth=2, zerolinecolor='gray')
         )
-        st.plotly_chart(fig, use_container_width=True)
+        st.plotly_chart(fig, width='stretch')
 
