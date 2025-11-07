@@ -4,6 +4,8 @@ from typing import Optional, Dict, Any, List, Generator
 import httpx
 from openai import OpenAI
 
+from lib.hyperliquid_tools import get_hyperliquid_tools
+
 
 class NansenMCPClient:
     """Custom MCP client for Nansen HTTP-based MCP server."""
@@ -230,9 +232,20 @@ def initialize_chat(openai_api_key: str, nansen_mcp_url: str, nansen_api_key: st
         # Initialize OpenAI client
         openai_client = OpenAI(api_key=openai_api_key)
 
+        # Load Hyperliquid tools and handlers
+        hyperliquid_tools, hyperliquid_handlers = get_hyperliquid_tools()
+
+        # Get MCP tools
+        mcp_tools = mcp_client.get_tools_for_openai()
+
+        # Combine all tools
+        all_tools = mcp_tools + hyperliquid_tools
+
         # Store in session state
         st.session_state.mcp_client = mcp_client
         st.session_state.openai_client = openai_client
+        st.session_state.hyperliquid_handlers = hyperliquid_handlers
+        st.session_state.all_tools = all_tools
         st.session_state.chat_messages = []
         st.session_state.chat_initialized = True
 
@@ -270,11 +283,11 @@ def run_chat():
                 try:
                     # Prepare messages for OpenAI
                     messages = [
-                        {"role": "system", "content": "You are a helpful assistant with access to Nansen blockchain data tools. Use the available tools to answer user questions about blockchain activity, tokens, and smart money movements."}
+                        {"role": "system", "content": "You are a helpful assistant with access to Nansen blockchain data tools and Hyperliquid trading functions. Use the available tools to answer user questions about blockchain activity, tokens, smart money movements, and to execute trades on Hyperliquid when requested."}
                     ] + st.session_state.chat_messages
 
                     # Get OpenAI response with function calling
-                    tools = mcp_client.get_tools_for_openai()
+                    tools = st.session_state.all_tools
                     response = openai_client.chat.completions.create(
                         model="gpt-4o-mini",
                         messages=messages,
@@ -293,25 +306,42 @@ def run_chat():
 
                             st.write(f"🔧 Calling tool: `{tool_name}`")
 
-                            # Create placeholder for streaming output
-                            tool_output_placeholder = st.empty()
-                            tool_result_parts = []
+                            # Check if this is a Hyperliquid tool
+                            hyperliquid_handlers = st.session_state.get("hyperliquid_handlers", {})
+                            
+                            if tool_name in hyperliquid_handlers:
+                                # Execute Hyperliquid tool directly
+                                try:
+                                    handler = hyperliquid_handlers[tool_name]
+                                    with st.spinner(f"Executing {tool_name}..."):
+                                        result = handler(**tool_args)
+                                    # Convert result to JSON string for OpenAI
+                                    tool_result = json.dumps(result) if isinstance(result, dict) else str(result)
+                                except Exception as e:
+                                    error_result = {
+                                        "status": "error",
+                                        "error": str(e)
+                                    }
+                                    tool_result = json.dumps(error_result)
+                            else:
+                                # Call the MCP tool with streaming
+                                tool_output_placeholder = st.empty()
+                                tool_result_parts = []
 
-                            # Call the MCP tool with streaming
-                            with st.spinner(f"Fetching data from {tool_name}..."):
-                                for chunk in mcp_client.call_tool_streaming(tool_name, tool_args):
-                                    tool_result_parts.append(chunk)
-                                    # Update placeholder with accumulated result
-                                    current_result = ''.join(tool_result_parts)
-                                    if current_result.startswith("Progress:"):
-                                        # Show progress updates
-                                        tool_output_placeholder.info(current_result)
-                                    else:
-                                        # Show partial results
-                                        tool_output_placeholder.text(current_result[:500] + "..." if len(current_result) > 500 else current_result)
+                                with st.spinner(f"Fetching data from {tool_name}..."):
+                                    for chunk in mcp_client.call_tool_streaming(tool_name, tool_args):
+                                        tool_result_parts.append(chunk)
+                                        # Update placeholder with accumulated result
+                                        current_result = ''.join(tool_result_parts)
+                                        if current_result.startswith("Progress:"):
+                                            # Show progress updates
+                                            tool_output_placeholder.info(current_result)
+                                        else:
+                                            # Show partial results
+                                            tool_output_placeholder.text(current_result[:500] + "..." if len(current_result) > 500 else current_result)
 
-                            tool_result = ''.join(tool_result_parts)
-                            tool_output_placeholder.empty()  # Clear the placeholder
+                                tool_result = ''.join(tool_result_parts)
+                                tool_output_placeholder.empty()  # Clear the placeholder
 
                             # Add tool response to messages
                             messages.append({
