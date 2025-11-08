@@ -226,3 +226,77 @@ def get_leverage(coin: str) -> Dict[str, Any]:
         }
 
 
+def place_limit_order(
+    coin: str,
+    is_buy: bool,
+    sz: float,
+    limit_px: float,
+    time_in_force: str = "Gtc",
+    leverage: Optional[int] = None,
+    is_cross: bool = True,
+) -> Dict[str, Any]:
+    """
+    Place a limit order on Hyperliquid.
+
+    Args:
+        coin: Trading pair (e.g., "ETH", "BTC")
+        is_buy: True for buy, False for sell
+        sz: Size of the order
+        limit_px: Limit price
+        time_in_force: Order time in force ("Gtc", "Ioc", "Alo")
+        leverage: Optional leverage value to set before placing order (e.g., 10 for 10x)
+        is_cross: If True, use cross margin, else isolated margin (only used if leverage is set)
+
+    Returns:
+        dict: Order result with status and order details
+    """
+    try:
+        address, info, exchange = get_hyperliquid_setup()
+
+        # Set leverage if specified
+        leverage_result = None
+        if leverage is not None:
+            leverage_result = exchange.update_leverage(leverage, coin, is_cross)
+            if leverage_result.get("status") != "ok":
+                return {
+                    "status": "error",
+                    "error": f"Failed to set leverage: {leverage_result}",
+                    "leverage_result": leverage_result,
+                }
+
+        # Place limit order
+        order_result = exchange.order(
+            coin, is_buy, sz, limit_px, {"limit": {"tif": time_in_force}}
+        )
+
+        result = {
+            "status": order_result.get("status", "unknown"),
+            "order_result": order_result,
+        }
+
+        # Include leverage result if it was set
+        if leverage_result is not None:
+            result["leverage_set"] = True
+            result["leverage_result"] = leverage_result
+
+        # If order was placed successfully, extract order ID
+        if order_result.get("status") == "ok":
+            statuses = (
+                order_result.get("response", {}).get("data", {}).get("statuses", [])
+            )
+            if statuses:
+                status = statuses[0]
+                if "resting" in status:
+                    result["order_id"] = status["resting"]["oid"]
+                    result["resting"] = True
+                elif "filled" in status:
+                    result["filled"] = True
+                elif "error" in status:
+                    result["error"] = status["error"]
+
+        return result
+    except Exception as e:
+        return {
+            "status": "error",
+            "error": str(e),
+        }

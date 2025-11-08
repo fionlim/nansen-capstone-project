@@ -4,6 +4,7 @@ from lib.hyperliquid_sdk import (
     fetch_balances_and_positions,
     get_available_trading_pairs,
     get_leverage,
+    place_limit_order,
 )
 
 
@@ -56,6 +57,50 @@ def get_hyperliquid_tools() -> Tuple[List[Dict[str, Any]], Dict[str, Callable]]:
                 },
             },
         },
+
+        # ============================================================================
+        # ORDER PLACING FUNCTIONS
+        # ============================================================================
+
+        {
+            "type": "function",
+            "function": {
+                "name": "place_limit_order",
+                "description": "Place a limit order on Hyperliquid. Specify the coin, buy/sell direction, size, and limit price. Optionally set leverage before placing the order.",
+                "parameters": {
+                    "type": "object",
+                    "properties": {
+                        "coin": {
+                            "type": "string",
+                            "description": "The trading pair symbol (e.g., 'ETH', 'BTC').",
+                        },
+                        "is_buy": {
+                            "type": "boolean",
+                            "description": "True for buy order, False for sell order.",
+                        },
+                        "sz": {"type": "number", "description": "Size of the order."},
+                        "limit_px": {
+                            "type": "number",
+                            "description": "Limit price for the order.",
+                        },
+                        "time_in_force": {
+                            "type": "string",
+                            "description": "Order time in force: 'Gtc' (Good till Cancel), 'Ioc' (Immediate or Cancel), or 'Alo' (Allow Orders). Default is 'Gtc'.",
+                            "enum": ["Gtc", "Ioc", "Alo"],
+                        },
+                        "leverage": {
+                            "type": "integer",
+                            "description": "Optional leverage value to set before placing order (e.g., 10 for 10x leverage). If not provided, uses existing leverage setting.",
+                        },
+                        "is_cross": {
+                            "type": "boolean",
+                            "description": "If true, use cross margin, else isolated margin. Only used if leverage is set. Default is true (cross margin).",
+                        },
+                    },
+                    "required": ["coin", "is_buy", "sz", "limit_px"],
+                },
+            },
+        },
     ]
     
     # Build handler registry mapping function names to handlers
@@ -63,6 +108,7 @@ def get_hyperliquid_tools() -> Tuple[List[Dict[str, Any]], Dict[str, Callable]]:
         "fetch_balances_positions": fetch_balances_and_positions,
         "get_available_trading_pairs": get_available_trading_pairs,
         "get_leverage": get_leverage,
+        "place_limit_order": place_limit_order,
     }
 
     return tools, handler_registry
