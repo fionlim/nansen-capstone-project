@@ -67,19 +67,17 @@ def main():
     if 'tx_related_chains' not in st.session_state:
         st.session_state.tx_related_chains = 'ethereum'
     if 'starred_wallets' not in st.session_state:
-        st.session_state.starred_wallets = []
+        starred_wallets = st_javascript("JSON.parse(localStorage.getItem('starred_wallets') || '[]');")
+        if not isinstance(starred_wallets, list):
+            st.info("Loading starred wallets...")
+            st.stop()
+        st.session_state.starred_wallets = starred_wallets
+    if 'is_starred' not in st.session_state:
+        st.session_state.is_starred = st.session_state.wallet in st.session_state.starred_wallets
 
     # --------------------------
     # Top-of-page filters
     # --------------------------
-    starred_wallets = st_javascript("JSON.parse(localStorage.getItem('starred_wallets') || '[]');")
-
-    if not isinstance(starred_wallets, list):
-        st.info("Loading starred wallets...")
-        st.stop()
-
-    st.session_state.starred_wallets = starred_wallets
-
     col1, col2 = st.columns(2)
     with col1: 
         wallet = st.text_input(
@@ -93,9 +91,6 @@ def main():
             value=st.session_state.get("label")
         )
         st.session_state.label = label.strip()
-
-    if 'is_starred' not in st.session_state:
-        st.session_state.is_starred = st.session_state.wallet in st.session_state.starred_wallets
 
     colA, colB = st.columns(2)
     with colA:
@@ -115,39 +110,32 @@ def main():
     # --------------------------
     if "profiler_loaded" not in st.session_state:
         st.session_state.profiler_loaded = False
-    print(st.session_state.is_starred, st.session_state.starred_wallets)
+
     load_col, star_col, reset_col = st.columns([1, 1, 2])
     with load_col:
         if st.button("Load Profiler"):
             st.session_state.profiler_loaded = True
+            st.session_state.is_starred = st.session_state.wallet in st.session_state.starred_wallets
     with star_col:
         if st.session_state.is_starred:
             if st.button("Unstar Wallet"):
                 st.session_state.is_starred = False
+                st.session_state.starred_wallets.remove(st.session_state.wallet)
                 components.html(f"""
                 <script>
-                    const wallet = "{st.session_state.wallet}";
-                    let wallets = JSON.parse(localStorage.getItem("starred_wallets")) || [];
-                    wallets = wallets.filter(w => w !== wallet);
-                    localStorage.setItem("starred_wallets", JSON.stringify(wallets));
-                    //windows.location.reload(); alternative to st.rerun()
+                    localStorage.setItem("starred_wallets", JSON.stringify({st.session_state.starred_wallets}));
                 </script>
                 """, height=0)
-                time.sleep(0.1)
                 st.rerun()
         else:
             if st.button("Star Wallet"):
                 st.session_state.is_starred = True
+                st.session_state.starred_wallets.append(st.session_state.wallet)
                 components.html(f"""
                 <script>
-                    const wallet = "{st.session_state.wallet}";
-                    let wallets = JSON.parse(localStorage.getItem("starred_wallets")) || [];
-                    wallets.push(wallet);
-                    localStorage.setItem("starred_wallets", JSON.stringify(wallets));
-                    //windows.location.reload(); alternative to st.rerun()
+                    localStorage.setItem("starred_wallets", JSON.stringify({st.session_state.starred_wallets}));
                 </script>
                 """, height=0)
-                time.sleep(0.1)
                 st.rerun()
 
     with reset_col:
