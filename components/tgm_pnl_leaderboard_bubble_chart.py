@@ -100,8 +100,8 @@ def render_pnl_leaderboard_bubble_chart(chain: str, token_address: str):
                     st.markdown("<br>", unsafe_allow_html=True)
                     if st.button("Go to Profile", use_container_width=True):
                         wallet_row = df_display[df_display['trader_address_label'] == selected_label].iloc[0]
-                        st.session_state["selected_wallet"] = wallet_row['trader_address']
-                        st.session_state["selected_wallet_label"] = wallet_row['trader_address_label']
+                        st.session_state["wallet"] = wallet_row['trader_address']
+                        st.session_state["label"] = wallet_row['trader_address_label']
                         st.switch_page("pages/3_Profiler_Dashboard.py")
 
                 # Create bubble chart

@@ -107,8 +107,8 @@ def render_holders_donut_chart(chain: str, token_address: str, aggregate_by_enti
                                 with row_cols[i]:
                                     if col_name == "address":
                                         if st.button(f"{row[col_name][:20]}... 🔍", key=f"{row[col_name]}_{idx}"):
-                                            st.session_state["selected_wallet"] = row["address"]
-                                            st.session_state["selected_wallet_label"] = row["address_label"]
+                                            st.session_state["wallet"] = row["address"]
+                                            st.session_state["label"] = row["address_label"]
                                             st.switch_page("pages/3_Profiler_Dashboard.py")
                                     else:
                                         st.write(row[col_name])

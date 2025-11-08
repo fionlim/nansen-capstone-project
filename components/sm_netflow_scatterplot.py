@@ -28,7 +28,7 @@ def render_netflow_scatterplot(payload: Dict):
             with col8:
                 st.markdown("<br>", unsafe_allow_html=True)
                 if st.button("Get Metrics", use_container_width=True):
-                    st.session_state["selected_token"] = df.loc[df["token_symbol"] == selected_token, "token_address"].iloc[0]
+                    st.session_state["token"] = df.loc[df["token_symbol"] == selected_token, "token_address"].iloc[0]
                     st.session_state["chain"] = df.loc[df["token_symbol"] == selected_token, "chain"].iloc[0]
                     st.switch_page("pages/2_TGM_Dashboard.py")
 
