@@ -4,10 +4,28 @@ import plotly.graph_objects as go
 from nansen_client import NansenClient
 from dataframes import net_flow_to_dataframe
 
-def render_netflow_podium(payload: Dict):
+def render_netflow_podium(chains: list, min_mc: int, max_mc: int, excl_labels: list):
 
     try:
         client = NansenClient()
+
+        if "all" in chains:
+            chains = ["all"]
+        payload = {
+            "chains": chains,
+            "filters": {
+                "include_stablecoins": False,
+                "include_native_tokens": False,
+                "market_cap_usd": {
+                    "min": min_mc,
+                    "max": max_mc
+                },
+                "exclude_smart_money_labels": excl_labels,
+            },
+            "pagination": {"page": 1, "per_page": 100},
+            "order_by": [{"field": "net_flow_24h_usd", "direction": "DESC"}],
+        }
+        
         items = client.smart_money_netflow(payload=payload)
         df = net_flow_to_dataframe(items)
         if df.empty:

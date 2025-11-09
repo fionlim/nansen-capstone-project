@@ -5,13 +5,23 @@ from dataframes import net_flow_to_dataframe
 import plotly.graph_objects as go
 import numpy as np
 
-def render_netflow_scatterplot(payload: Dict):
+def render_netflow_scatterplot():
     col5, col6 = st.columns(2)
     with col5:
         st.write("Time period: Past 24 hours")
 
     try:
         client = NansenClient()
+
+        payload = {
+            "chains": ["ethereum", "solana", "base"],
+            "filters": {
+                "include_stablecoins": False,
+                "include_native_tokens": False,
+            },
+            "pagination": {"page": 1, "per_page": 100},
+        }
+        
         items = client.smart_money_netflow(payload=payload, fetch_all=True)
         df = net_flow_to_dataframe(items)
         if df.empty:
@@ -24,10 +34,10 @@ def render_netflow_scatterplot(payload: Dict):
         with col6:
             col7, col8 = st.columns([2, 1])
             with col7:
-                selected_token = st.selectbox("Select a token", df['token_symbol'].unique(), index=0, label_visibility="hidden")
+                selected_token = st.selectbox("Select a token", df['token_symbol'].unique(), index=0, label_visibility="hidden", key='scatterplot_token')
             with col8:
                 st.markdown("<br>", unsafe_allow_html=True)
-                if st.button("Get Metrics", use_container_width=True):
+                if st.button("Get Metrics", use_container_width=True, key='scatterplot_button'):
                     st.session_state["token"] = df.loc[df["token_symbol"] == selected_token, "token_address"].iloc[0]
                     st.session_state["chain"] = df.loc[df["token_symbol"] == selected_token, "chain"].iloc[0]
                     st.switch_page("pages/2_TGM_Dashboard.py")

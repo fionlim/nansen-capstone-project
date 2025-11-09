@@ -44,137 +44,78 @@ def main():
     st.write(f"Hello, {st.user.name}!")
 
     st.header("What are Smart Money Buying?")
-    col_1, col_2 = st.columns(2)
-    with col_1:
-        all_chains = ["ethereum", "solana", "base", 
-            "arbitrum", "avalanche", "berachain", 
-            "blast", "bnb", "goat", 
-            "hyperevm", "iotaevm", "linea", 
-            "mantle", "optimism", "polygon",
-            "ronin", "sei", "scroll", 
-            "sonic", "unichain", "zksync"]
-        selected_chains = st.multiselect(
-            "Select Chains",
-            options=["all"] + all_chains,
-            default=["all"]
-        )
-        smart_money_labels = [
-            "Fund", "Smart Trader", "30D Smart Trader",
-            "90D Smart Trader", "180D Smart Trader"
-        ]
-        exclude_smart_money_labels = st.multiselect(
-            "Exclude Smart Money Labels",
-            options=smart_money_labels,
-            default=[]
-        )
-    with col_2:
-        col_min, col_max = st.columns(2)
-        with col_min:
+
+    # Initialize session
+    if 'chains' not in st.session_state:
+        st.session_state.chains = ['all']
+    if 'excl_labels' not in st.session_state:
+        st.session_state.excl_labels = []
+    if 'min_mc' not in st.session_state:
+        st.session_state.min_mc = 1_000_000
+    if 'max_mc' not in st.session_state:
+        st.session_state.max_mc = 10_000_000_000
+    if 'starred_wallets' not in st.session_state:
+        starred_wallets = st_javascript("JSON.parse(localStorage.getItem('starred_wallets') || '[]');")
+        if not isinstance(starred_wallets, list):
+            st.info("Loading starred wallets...")
+            st.stop()
+        st.session_state.starred_wallets = starred_wallets
+
+    with st.form(key='input_form'):
+        c1, c2, c3 = st.columns([2, 1, 1])
+        with c1:
+            all_chains = ["all", "ethereum", "solana", "base", 
+                "arbitrum", "avalanche", "berachain", 
+                "blast", "bnb", "goat", 
+                "hyperevm", "iotaevm", "linea", 
+                "mantle", "optimism", "polygon",
+                "ronin", "sei", "scroll", 
+                "sonic", "unichain", "zksync"]
+            selected_chains = st.multiselect(
+                "Select Chains",
+                options=all_chains,
+                key="chains"
+            )
+            smart_money_labels = [
+                "Fund", "Smart Trader", "30D Smart Trader",
+                "90D Smart Trader", "180D Smart Trader"
+            ]
+            exclude_smart_money_labels = st.multiselect(
+                "Exclude Smart Money Labels",
+                options=smart_money_labels,
+                key="excl_labels"
+            )
+        with c2:
             min_market_cap = st.number_input(
                 "Min Token Market Cap (USD)",
-                min_value=0, value=1_000_000, step=100_000, format="%d"
+                min_value=0, step=100_000, format="%d",
+                key="min_mc"
             )
             st.markdown("<br>", unsafe_allow_html=True)
-            submitted = st.button("Apply Filters")
-        with col_max:
+            submit = st.form_submit_button("🔄 Update Dashboard")
+        with c3:
             max_market_cap = st.number_input(
                 "Max Token Market Cap (USD)",
-                min_value=min_market_cap, value=10_000_000_000, step=100_000, format="%d"
+                min_value=min_market_cap, step=100_000, format="%d",
+                key="max_mc"
             )
+
     col3, col4 = st.columns(2)
     with col3:
-        DEX_DEFAULT_PAYLOAD = {
-            "chains": [
-                "all"
-            ],
-            "filters": {},
-            "pagination": {
-                "page": 1,
-                "per_page": 100
-            },
-            "order_by": [
-                {
-                    "field": "trade_value_usd",
-                    "direction": "DESC"
-                }
-            ]
-        }
         st.subheader("Top 3 Tokens by DEX Trading Value (24h)")
-        value_payload = json.loads(json.dumps(DEX_DEFAULT_PAYLOAD))
-        if "all" in selected_chains or set(selected_chains) == set(all_chains):
-            value_payload["chains"] = ["all"]
-        else:
-            value_payload["chains"] = selected_chains
-        value_payload["filters"]["token_bought_market_cap"] = {
-            "min": min_market_cap,
-            "max": max_market_cap
-        }
-        value_payload["filters"]["exclude_smart_money_labels"] = exclude_smart_money_labels
-        if submitted:
-            render_dex_trades_podium(value_payload)
-        else:
-            render_dex_trades_podium(DEX_DEFAULT_PAYLOAD)
+        render_dex_trades_podium(st.session_state.chains, st.session_state.min_mc, st.session_state.max_mc, st.session_state.excl_labels)
+
     with col4:
-        NETFLOW_DEFAULT_PAYLOAD = {
-            "chains": [
-                "all"
-            ],
-            "filters": {
-                "include_stablecoins": False,
-                "include_native_tokens": False
-            },
-            "pagination": {
-                "page": 1,
-                "per_page": 100
-            },
-            "order_by": [
-                {
-                    "field": "net_flow_24h_usd",
-                    "direction": "DESC"
-                }
-            ]
-        }
         st.subheader("Top 3 Tokens by Netflow (24h)")
+        render_netflow_podium(st.session_state.chains, st.session_state.min_mc, st.session_state.max_mc, st.session_state.excl_labels)
 
-        netflow_payload = json.loads(json.dumps(NETFLOW_DEFAULT_PAYLOAD))
-        if "all" in selected_chains or set(selected_chains) == set(all_chains):
-            netflow_payload["chains"] = ["all"]
-        else:
-            netflow_payload["chains"] = selected_chains
-        netflow_payload["filters"]["market_cap_usd"] = {
-            "min": min_market_cap,
-            "max": max_market_cap 
-        }
-        netflow_payload["filters"]["exclude_smart_money_labels"] = exclude_smart_money_labels
-        if submitted:
-            render_netflow_podium(netflow_payload)
-        else:
-            render_netflow_podium(NETFLOW_DEFAULT_PAYLOAD)
-
-    SCATTERPLOT_DEFAULT_PAYLOAD = {
-        "chains": [
-            "ethereum",
-            "solana",
-            "base"
-        ],
-        "filters": {
-            "include_stablecoins": False,
-            "include_native_tokens": False
-        },
-        "pagination": {
-            "page": 1,
-            "per_page": 100
-        },
-    }
     st.divider()
     st.subheader("Token Netflow Distribution (Netflow > $5,000)")
-    render_netflow_scatterplot(SCATTERPLOT_DEFAULT_PAYLOAD)
+    render_netflow_scatterplot()
 
-    st.subheader("Starred Wallet Token Purchases")
-    starred_wallets = st_javascript("JSON.parse(localStorage.getItem('starred_wallets') || '[]');")
-    if not isinstance(starred_wallets, list):
-        st.info("Loading starred wallets...")
-        st.stop()
-    render_wallet_token_tracker(starred_wallets)
+    st.divider()
+    st.subheader("Starred Wallet Token Purchases on Ethereum")
+    render_wallet_token_tracker(st.session_state.starred_wallets)
+
 if __name__ == "__main__":
     main()
