@@ -19,6 +19,11 @@ if not st.user.is_logged_in:
         st.login()
     st.stop()
 
+# --- Handle URL Query Parameters ---
+query_params = st.query_params
+url_token = query_params.get("token", "")
+url_chain = query_params.get("chain", "")
+
 # Initialize session
 if 'token' not in st.session_state:
     st.session_state.token = ''
@@ -29,18 +34,32 @@ if 'period' not in st.session_state:
 if 'aggregate_by_entity' not in st.session_state:
     st.session_state.aggregate_by_entity = False
 
-# --- Check if User came from Landing Page ---
-prefilled_token = st.session_state.get("selected_token", "")
-if prefilled_token:
+# --- Priority: URL params > Landing Page > Empty ---
+# Set from URL query parameters if present
+if url_token:
+    st.session_state.token = url_token.strip().lower()
+    if url_chain:
+        # Validate chain is in available chains
+        available_chains = ["ethereum", "solana", "arbitrum", "optimism", "base", "bnb", "polygon"]
+        if url_chain.lower() in available_chains:
+            st.session_state.chain = url_chain.lower()
+        else:
+            st.warning(f"Invalid chain '{url_chain}'. Using default: ethereum")
+    st.info(f"📎 Loaded from URL: Token {st.session_state.token[:10]}... on {st.session_state.chain}")
+elif st.session_state.get("selected_token", ""):
+    # Fallback to landing page prefilled token
+    prefilled_token = st.session_state.get("selected_token", "")
+    st.session_state.token = prefilled_token.strip().lower()
     st.info(f"Auto-loaded token: {prefilled_token}")
 
 # --- Inputs ---
 with st.form(key='input_form'):
     c1, c2, c3, c4 = st.columns([2, 1, 1, 1])
     with c1:
+        # Use session state token as default value (from URL or landing page)
         token = st.text_input(
             "Token address", 
-            value=prefilled_token,
+            value=st.session_state.token,
             placeholder="0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48"
         )
         if not token:
@@ -48,9 +67,10 @@ with st.form(key='input_form'):
         st.session_state.token = token.strip().lower()
     with c2:
         available_chains = ["ethereum", "solana", "arbitrum", "optimism", "base", "bnb", "polygon"]
-        if prefilled_token:
+        # Find index of current chain in session state
+        try:
             default_index = available_chains.index(st.session_state["chain"])
-        else:
+        except ValueError:
             default_index = 0
         chain = st.selectbox("Chain", available_chains, index=default_index, key="chain")
     with c3:
