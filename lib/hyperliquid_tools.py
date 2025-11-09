@@ -8,6 +8,7 @@ from lib.hyperliquid_sdk import (
     place_market_order,
     set_take_profit_stop_loss,
     cancel_all_orders,
+    close_position,
 )
 
 
@@ -189,6 +190,31 @@ def get_hyperliquid_tools() -> Tuple[List[Dict[str, Any]], Dict[str, Callable]]:
                 },
             },
         },
+        {
+            "type": "function",
+            "function": {
+                "name": "close_position",
+                "description": "Close an existing position on Hyperliquid using a market order. If size is not specified, closes the entire position.",
+                "parameters": {
+                    "type": "object",
+                    "properties": {
+                        "coin": {
+                            "type": "string",
+                            "description": "The trading pair symbol (e.g., 'ETH', 'BTC').",
+                        },
+                        "sz": {
+                            "type": "number",
+                            "description": "Size to close (optional, if not provided closes entire position).",
+                        },
+                        "slippage": {
+                            "type": "number",
+                            "description": "Maximum slippage tolerance as decimal (e.g., 0.05 for 5%). Default is 0.05.",
+                        },
+                    },
+                    "required": ["coin"],
+                },
+            },
+        },
     ]
 
 
@@ -201,6 +227,7 @@ def get_hyperliquid_tools() -> Tuple[List[Dict[str, Any]], Dict[str, Callable]]:
         "place_market_order": place_market_order,
         "set_take_profit_stop_loss": set_take_profit_stop_loss,
         "cancel_all_orders": cancel_all_orders,
+        "close_position": close_position,
     }
 
     return tools, handler_registry

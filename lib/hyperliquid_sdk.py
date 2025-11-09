@@ -533,3 +533,55 @@ def cancel_all_orders(coin: str) -> Dict[str, Any]:
             "status": "error",
             "error": str(e),
         }
+
+
+def close_position(
+    coin: str,
+    sz: Optional[float] = None,
+    slippage: float = 0.05,
+    px: Optional[float] = None,
+) -> Dict[str, Any]:
+    """
+    Close an existing position on Hyperliquid using a market order.
+
+    Args:
+        coin: Trading pair (e.g., "ETH", "BTC")
+        sz: (Notional) Size to close (if None, closes entire position)
+        slippage: Maximum slippage tolerance (default 0.05 = 5%)
+        px: Optional price hint (if None, SDK calculates aggressive market price)
+
+    Returns:
+        dict: Order result with status and order details
+    """
+    try:
+        address, info, exchange = get_hyperliquid_setup()
+
+        # Close position (automatically determines buy/sell direction)
+        order_result = exchange.market_close(coin, sz, px, slippage)
+
+        result = {
+            "status": order_result.get("status", "unknown"),
+            "order_result": order_result,
+        }
+
+        # If order was placed successfully, extract order ID
+        if order_result.get("status") == "ok":
+            statuses = (
+                order_result.get("response", {}).get("data", {}).get("statuses", [])
+            )
+            if statuses:
+                status = statuses[0]
+                if "resting" in status:
+                    result["order_id"] = status["resting"]["oid"]
+                    result["resting"] = True
+                elif "filled" in status:
+                    result["filled"] = True
+                elif "error" in status:
+                    result["error"] = status["error"]
+
+        return result
+    except Exception as e:
+        return {
+            "status": "error",
+            "error": str(e),
+        }
