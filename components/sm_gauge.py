@@ -5,6 +5,26 @@ from dataframes import tgm_dex_trades_to_dataframe
 import streamlit as st
 import plotly.graph_objects as go
 
+@st.cache_data(ttl=300)
+def fetch_trades(chain, token_address, from_datetime, to_datetime, only_smart_money):
+    # Initialize client
+    client = NansenClient()
+                    
+    # Prepare payloads
+    payload = {
+        "chain": chain,
+        "token_address": token_address,
+        "only_smart_money": only_smart_money,
+        "date": {"from": from_datetime, "to": to_datetime},
+        "pagination": {"page": 1, "per_page": 1000},
+        "order_by": [{"field": "block_timestamp", "direction": "ASC"}],
+    }
+                
+    # Fetch data from Nansen API
+    trades_items = client.tgm_dex_trades(payload, fetch_all=True)
+    df = tgm_dex_trades_to_dataframe(trades_items)
+    
+    return df
 
 @st.fragment
 def render_gauge_charts(token_address: str, chain: str, period: str):
@@ -46,28 +66,9 @@ def render_gauge_charts(token_address: str, chain: str, period: str):
                     to_datetime = now.isoformat()
                     from_datetime = (now - period_mapping[period]).isoformat()
                     
-                    # Initialize client
-                    client = NansenClient()
-                    
-                    # Prepare payloads
-                    payload = {
-                        "chain": chain,
-                        "token_address": token_address,
-                        "date": {"from": from_datetime, "to": to_datetime},
-                        "pagination": {"page": 1, "per_page": 1000},
-                        "order_by": [{"field": "block_timestamp", "direction": "ASC"}],
-                    }
-                    
-                    smart_payload = copy.deepcopy(payload)
-                    smart_payload["only_smart_money"] = True
-                    
-                    # Fetch data from Nansen API
-                    all_dex_trades = client.tgm_dex_trades(payload, fetch_all=True)
-                    smart_money_trades = client.tgm_dex_trades(smart_payload, fetch_all=True)
-                    
                     # Convert to dataframes
-                    df_all = tgm_dex_trades_to_dataframe(all_dex_trades)
-                    df_smart = tgm_dex_trades_to_dataframe(smart_money_trades)
+                    df_all = fetch_trades(chain, token_address, from_datetime, to_datetime, False)
+                    df_smart = fetch_trades(chain, token_address, from_datetime, to_datetime, True)
                     
                     # Calculate metrics
                     total_trades = len(df_all)
