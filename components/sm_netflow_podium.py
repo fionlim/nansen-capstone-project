@@ -4,6 +4,7 @@ import plotly.graph_objects as go
 from nansen_client import NansenClient
 from dataframes import net_flow_to_dataframe
 
+@st.fragment
 def render_netflow_podium(chains: list, min_mc: int, max_mc: int, excl_labels: list):
 
     try:
@@ -25,7 +26,7 @@ def render_netflow_podium(chains: list, min_mc: int, max_mc: int, excl_labels: l
             "pagination": {"page": 1, "per_page": 100},
             "order_by": [{"field": "net_flow_24h_usd", "direction": "DESC"}],
         }
-        
+
         items = client.smart_money_netflow(payload=payload)
         df = net_flow_to_dataframe(items)
         if df.empty:

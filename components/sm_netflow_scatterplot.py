@@ -5,6 +5,7 @@ from dataframes import net_flow_to_dataframe
 import plotly.graph_objects as go
 import numpy as np
 
+@st.fragment
 def render_netflow_scatterplot():
     col5, col6 = st.columns(2)
     with col5:
@@ -21,7 +22,7 @@ def render_netflow_scatterplot():
             },
             "pagination": {"page": 1, "per_page": 100},
         }
-        
+
         items = client.smart_money_netflow(payload=payload, fetch_all=True)
         df = net_flow_to_dataframe(items)
         if df.empty:

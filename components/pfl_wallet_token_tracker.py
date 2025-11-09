@@ -5,6 +5,7 @@ from datetime import datetime, timezone, timedelta
 from nansen_client import NansenClient
 from dataframes import pfl_transactions_to_dataframe, tgm_token_screener_to_dataframe
 
+@st.fragment
 def render_wallet_token_tracker(wallets: List): 
     try:
         if not wallets:

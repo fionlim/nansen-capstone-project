@@ -4,6 +4,7 @@ import plotly.graph_objects as go
 from nansen_client import NansenClient
 from dataframes import dex_trades_to_dataframe
 
+@st.fragment
 def render_dex_trades_podium(chains: list, min_mc: int, max_mc: int, excl_labels: list):
     try:
         client = NansenClient()
