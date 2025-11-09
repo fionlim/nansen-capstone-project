@@ -5,15 +5,14 @@ from datetime import datetime, timezone, timedelta
 from nansen_client import NansenClient
 from dataframes import pfl_transactions_to_dataframe, tgm_token_screener_to_dataframe
 
-def render_wallet_token_tracker(wallets: List): #specify chain from outside filter
-
+def render_wallet_token_tracker(wallets: List): 
     try:
-        client = NansenClient()
-
         if not wallets:
             st.warning("No starred wallets.")
             return
+
         with st.spinner("Fetching starred wallet token purchases..."):
+            client = NansenClient()
             starred_wallets = wallets
 
             eth_swap_in_methods = ["swapExactTokensForTokens", "swapTokensForExactTokens",
@@ -95,6 +94,9 @@ def render_wallet_token_tracker(wallets: List): #specify chain from outside filt
                 return
 
             token_cards = []
+            token_symbols_map = {}
+            wallet_labels_map = {}
+
             for (token_address, chain), wallet_map in token_tx_map.items():
                 token_payload = {
                     "chains": [chain],
@@ -105,7 +107,7 @@ def render_wallet_token_tracker(wallets: List): #specify chain from outside filt
                 token_items = client.tgm_token_screener(payload=token_payload)
                 token_df = tgm_token_screener_to_dataframe(token_items)
 
-                if token_df.empty:
+                if token_df.empty or token_df.iloc[0].get("token_symbol") == '':
                     st.warning("No net flow data returned for the selected filters.")
                     return
                 
@@ -116,9 +118,14 @@ def render_wallet_token_tracker(wallets: List): #specify chain from outside filt
                 market_cap = token_row.get("market_cap_usd", "N/A")
                 volume_24h = token_row.get("volume", "N/A")
 
+                token_symbols_map[token_symbol] = (token_address, chain)
+
                 wallet_sections = ""
                 for (wallet, wallet_label), tx_list in wallet_map.items():
                     wallet_display = f"{wallet[:20]}..."
+
+                    if wallet_label not in wallet_labels_map:
+                        wallet_labels_map[wallet_label] = wallet 
 
                     balance_payload = {
                         "chain": chain,
@@ -183,7 +190,30 @@ def render_wallet_token_tracker(wallets: List): #specify chain from outside filt
                     </div>
                 """
                 token_cards.append(token_card_html)
+
+            col1, col2, col3, col4 = st.columns([2, 1, 2, 1])
+            with col1:
+                selected_token = st.selectbox("Select a token", list(token_symbols_map.keys()), index=0, label_visibility="hidden", key="tracker_token")
             
+            with col2:
+                st.markdown("<br>", unsafe_allow_html=True)
+                if st.button("Get Metrics", use_container_width=True, key="tracker_token_button"):
+                    token_address, chain = token_symbols_map[selected_token]
+                    st.session_state["token"] = token_address
+                    st.session_state["chain"] = chain
+                    st.switch_page("pages/2_TGM_Dashboard.py")
+
+            with col3:
+                selected_wallet_label = st.selectbox("Select a wallet", list(wallet_labels_map.keys()), index=0, label_visibility="hidden", key="tracker_wallet")
+            
+            with col4:
+                st.markdown("<br>", unsafe_allow_html=True)
+                if st.button("Go to Profiler", use_container_width=True, key="tracker_wallet_button"):
+                    wallet = wallet_labels_map[selected_wallet_label]
+                    st.session_state["wallet"] = wallet
+                    st.session_state["label"] = selected_wallet_label
+                    st.switch_page("pages/3_Profiler_Dashboard.py")
+
             st.markdown(
                 f"""
                     <div style="display:flex; flex-wrap:wrap; justify-content:space-between;">
@@ -192,6 +222,6 @@ def render_wallet_token_tracker(wallets: List): #specify chain from outside filt
                 """,
                 unsafe_allow_html=True,
             )
-            
+        
     except Exception as e:
         st.error(f"Unexpected error: {e}")
