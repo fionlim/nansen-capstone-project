@@ -74,6 +74,7 @@ def main():
             selected_chains = st.multiselect(
                 "Select Chains",
                 options=all_chains,
+                default=st.session_state.chains,
                 key="chains"
             )
             smart_money_labels = [
@@ -83,12 +84,14 @@ def main():
             exclude_smart_money_labels = st.multiselect(
                 "Exclude Smart Money Labels",
                 options=smart_money_labels,
+                default=st.session_state.excl_labels,
                 key="excl_labels"
             )
         with c2:
             min_market_cap = st.number_input(
                 "Min Token Market Cap (USD)",
                 min_value=0, step=100_000, format="%d",
+                value=st.session_state.min_mc,
                 key="min_mc"
             )
             st.markdown("<br>", unsafe_allow_html=True)
@@ -97,6 +100,7 @@ def main():
             max_market_cap = st.number_input(
                 "Max Token Market Cap (USD)",
                 min_value=min_market_cap, step=100_000, format="%d",
+                value=st.session_state.max_mc,
                 key="max_mc"
             )
 

@@ -108,6 +108,7 @@ def render_wallet_token_tracker(wallets: List):
                 token_items = client.tgm_token_screener(payload=token_payload)
                 token_df = tgm_token_screener_to_dataframe(token_items)
 
+                # WARN: For now, check if token_symbol is empty to detect shitcoin that Nansen does not have data on 
                 if token_df.empty or token_df.iloc[0].get("token_symbol") == '':
                     st.warning("No net flow data returned for the selected filters.")
                     return
