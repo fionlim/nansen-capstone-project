@@ -1,9 +1,25 @@
 import streamlit as st
-from typing import Dict
 from nansen_client import NansenClient
 from dataframes import net_flow_to_dataframe
 import plotly.graph_objects as go
 import numpy as np
+
+@st.cache_data(ttl=300)
+def fetch_netflows():
+    client = NansenClient()
+    payload = {
+        "chains": ["ethereum", "solana", "base"],
+        "filters": {
+            "include_stablecoins": False,
+            "include_native_tokens": False,
+        },
+        "pagination": {"page": 1, "per_page": 100},
+    }
+
+    items = client.smart_money_netflow(payload=payload, fetch_all=True)
+    df = net_flow_to_dataframe(items)
+
+    return df
 
 @st.fragment
 def render_netflow_scatterplot():
@@ -12,19 +28,7 @@ def render_netflow_scatterplot():
         st.write("Time period: Past 24 hours")
 
     try:
-        client = NansenClient()
-
-        payload = {
-            "chains": ["ethereum", "solana", "base"],
-            "filters": {
-                "include_stablecoins": False,
-                "include_native_tokens": False,
-            },
-            "pagination": {"page": 1, "per_page": 100},
-        }
-
-        items = client.smart_money_netflow(payload=payload, fetch_all=True)
-        df = net_flow_to_dataframe(items)
+        df = fetch_netflows()
         if df.empty:
             st.warning("No net flow data returned for the selected filters.")
             return

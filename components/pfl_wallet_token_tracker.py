@@ -5,6 +5,50 @@ from datetime import datetime, timezone, timedelta
 from nansen_client import NansenClient
 from dataframes import pfl_transactions_to_dataframe, tgm_token_screener_to_dataframe
 
+@st.cache_data(ttl=300)
+def fetch_transactions(_client, wallet, from_iso, to_iso):
+    transaction_payload = {
+        "address": wallet,
+        "chain": "ethereum",
+        "date": {"from": from_iso,
+                "to": to_iso},
+        "hide_spam_token": True,
+        "order_by": [{"field": "block_timestamp", "direction": "DESC"}],
+        "pagination": {"page": 1, "per_page": 20},
+    }
+
+    transaction_items = _client.profiler_address_transactions(payload=transaction_payload)
+    transaction_df = pfl_transactions_to_dataframe(transaction_items)
+
+    return transaction_df
+
+@st.cache_data(ttl=300)
+def fetch_token_screener(_client, chain, from_iso, to_iso, token_address):
+    token_payload = {
+        "chains": [chain],
+        "date": {"from": from_iso, "to":to_iso},
+        "filters": {"token_address": token_address},
+        "pagination": {"page": 1, "per_page": 1},
+    }
+    token_items = _client.tgm_token_screener(payload=token_payload)
+    token_df = tgm_token_screener_to_dataframe(token_items)
+
+    return token_df
+
+@st.cache_data(ttl=300)
+def fetch_current_balance(_client, chain, wallet, token_address):
+    balance_payload = {
+        "chain": chain,
+        "address": wallet,
+        "filters": {"token_address": token_address},
+        "pagination": {"page": 1, "recordsPerPage": 1},
+    }
+    balance_items = _client.profiler_address_current_balance(balance_payload)
+    balance_df = pd.DataFrame(balance_items)
+
+    return balance_df
+
+
 @st.fragment
 def render_wallet_token_tracker(wallets: List): 
     try:
@@ -32,18 +76,7 @@ def render_wallet_token_tracker(wallets: List):
             token_tx_map: Dict[Tuple[str, str], Dict[Tuple[str, str], List[Dict]]] = {}
 
             for wallet in starred_wallets:
-                transaction_payload = {
-                    "address": wallet,
-                    "chain": "ethereum",
-                    "date": {"from": from_iso,
-                            "to": to_iso},
-                    "hide_spam_token": True,
-                    "order_by": [{"field": "block_timestamp", "direction": "DESC"}],
-                    "pagination": {"page": 1, "per_page": 20},
-                }
-
-                transaction_items = client.profiler_address_transactions(payload=transaction_payload)
-                transaction_df = pfl_transactions_to_dataframe(transaction_items)
+                transaction_df = fetch_transactions(client, wallet, from_iso, to_iso)
                 if transaction_df.empty:
                     st.warning("No net flow data returned for the selected filters.")
                     return
@@ -99,14 +132,7 @@ def render_wallet_token_tracker(wallets: List):
             wallet_labels_map = {}
 
             for (token_address, chain), wallet_map in token_tx_map.items():
-                token_payload = {
-                    "chains": [chain],
-                    "date": {"from": from_iso, "to":to_iso},
-                    "filters": {"token_address": token_address},
-                    "pagination": {"page": 1, "per_page": 1},
-                }
-                token_items = client.tgm_token_screener(payload=token_payload)
-                token_df = tgm_token_screener_to_dataframe(token_items)
+                token_df = fetch_token_screener(client, chain, from_iso, to_iso, token_address)
 
                 # WARN: For now, check if token_symbol is empty to detect shitcoin that Nansen does not have data on 
                 if token_df.empty or token_df.iloc[0].get("token_symbol") == '':
@@ -129,14 +155,8 @@ def render_wallet_token_tracker(wallets: List):
                     if wallet_label not in wallet_labels_map:
                         wallet_labels_map[wallet_label] = wallet 
 
-                    balance_payload = {
-                        "chain": chain,
-                        "address": wallet,
-                        "filters": {"token_address": token_address},
-                        "pagination": {"page": 1, "recordsPerPage": 1},
-                    }
-                    balance_items = client.profiler_address_current_balance(balance_payload)
-                    balance_df = pd.DataFrame(balance_items)
+                    balance_df = fetch_current_balance(client, chain, wallet, token_address)
+                    
                     token_balance_value = balance_df["value_usd"].iloc[0] if not balance_df.empty else 0
 
                     tx_count_received = sum(1 for tx in tx_list if tx["transaction_type"] == "receive")
