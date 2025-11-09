@@ -1,3 +1,3 @@
 """
-Package for Hyperliquid Tools.
+Package for Nansen MCP and Hyperliquid Tools.
 """
