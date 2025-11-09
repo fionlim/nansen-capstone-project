@@ -6,6 +6,7 @@ from lib.hyperliquid_sdk import (
     get_leverage,
     place_limit_order,
     place_market_order,
+    set_take_profit_stop_loss,
 )
 
 
@@ -136,6 +137,35 @@ def get_hyperliquid_tools() -> Tuple[List[Dict[str, Any]], Dict[str, Callable]]:
                 },
             },
         },
+        {
+            "type": "function",
+            "function": {
+                "name": "set_take_profit_stop_loss",
+                "description": "Set take profit (tp) and/or stop loss (sl) orders using trigger orders for open positions. At least one of take_profit_price or stop_loss_price must be provided.",
+                "parameters": {
+                    "type": "object",
+                    "properties": {
+                        "coin": {
+                            "type": "string",
+                            "description": "The trading pair symbol (e.g., 'ETH', 'BTC').",
+                        },
+                        "take_profit_price": {
+                            "type": "number",
+                            "description": "Trigger price for take profit order (optional).",
+                        },
+                        "stop_loss_price": {
+                            "type": "number",
+                            "description": "Trigger price for stop loss order (optional).",
+                        },
+                        "is_market": {
+                            "type": "boolean",
+                            "description": "If true, use market order when triggered, else limit order. Default is true.",
+                        },
+                    },
+                    "required": ["coin"],
+                },
+            },
+        },
     ]
     
     # Build handler registry mapping function names to handlers
@@ -145,6 +175,7 @@ def get_hyperliquid_tools() -> Tuple[List[Dict[str, Any]], Dict[str, Callable]]:
         "get_leverage": get_leverage,
         "place_limit_order": place_limit_order,
         "place_market_order": place_market_order,
+        "set_take_profit_stop_loss": set_take_profit_stop_loss,
     }
 
     return tools, handler_registry

@@ -378,3 +378,115 @@ def place_market_order(
             "status": "error",
             "error": str(e),
         }
+
+
+def set_take_profit_stop_loss(
+    coin: str,
+    take_profit_price: Optional[float] = None,
+    stop_loss_price: Optional[float] = None,
+    is_market: bool = True,
+) -> Dict[str, Any]:
+    """
+    Set take profit and/or stop loss orders using trigger orders for open positions.
+
+    Args:
+        coin: Trading pair (e.g., "ETH", "BTC")
+        take_profit_price: Trigger price for take profit (None to skip)
+        stop_loss_price: Trigger price for stop loss (None to skip)
+        is_market: If True, use market order when triggered, else limit order
+
+    Returns:
+        dict: Results for each order placed
+    """
+    try:
+        address, info, exchange = get_hyperliquid_setup()
+
+        results = {
+            "status": "success",
+            "orders": [],
+        }
+
+        # Get current position to determine size and direction
+        user_state = info.user_state(address)
+        position_size = 0.0
+        is_position_long = True
+
+        for asset_position in user_state.get("assetPositions", []):
+            position = asset_position.get("position", {})
+            if position.get("coin") == coin:
+                position_size = abs(float(position.get("szi", 0)))
+                is_position_long = float(position.get("szi", 0)) > 0
+                break
+
+        if position_size == 0:
+            return {
+                "status": "error",
+                "error": f"No open position found for {coin}",
+            }
+
+        # Place take profit order if specified
+        if take_profit_price is not None:
+            # TP is opposite direction of position
+            tp_is_buy = not is_position_long
+            tp_result = exchange.order(
+                coin,
+                tp_is_buy,
+                position_size,
+                take_profit_price,
+                {
+                    "trigger": {
+                        "triggerPx": take_profit_price,
+                        "isMarket": is_market,
+                        "tpsl": "tp",
+                    }
+                },
+                reduce_only=True,
+            )
+            results["orders"].append(
+                {
+                    "type": "take_profit",
+                    "price": take_profit_price,
+                    "result": tp_result,
+                }
+            )
+
+        # Place stop loss order if specified
+        if stop_loss_price is not None:
+            # SL is opposite direction of position
+            sl_is_buy = not is_position_long
+            sl_result = exchange.order(
+                coin,
+                sl_is_buy,
+                position_size,
+                stop_loss_price,
+                {
+                    "trigger": {
+                        "triggerPx": stop_loss_price,
+                        "isMarket": is_market,
+                        "tpsl": "sl",
+                    }
+                },
+                reduce_only=True,
+            )
+            results["orders"].append(
+                {
+                    "type": "stop_loss",
+                    "price": stop_loss_price,
+                    "result": sl_result,
+                }
+            )
+
+        if not results["orders"]:
+            results["status"] = "error"
+            results["error"] = (
+                "At least one of take_profit_price or stop_loss_price must be provided"
+            )
+
+        return results
+    except Exception as e:
+        return {
+            "status": "error",
+            "error": str(e),
+        }
+
+
