@@ -5,13 +5,27 @@ import streamlit as st
 import plotly.express as px
 from nansen_client import NansenClient
 
+@st.cache_data(ttl=300)
+def fetch_profiler_address_pnl_summary(_client, address, chain_all, from_iso, to_iso):
+    payload = {
+        "address": address, 
+        "chain": chain_all, 
+        "date": {
+            "from": from_iso, 
+            "to": to_iso
+        }
+    }
+
+    items = _client.profiler_address_pnl_summary(payload)
+    df = pd.DataFrame(items.get("top5_tokens", []))
+
+    return df
+
 def render_roi_pnl_scatter(client: NansenClient, address: str, chain_all: str, from_iso: str, to_iso: str):
     st.subheader("ROI vs PnL by Token")
     st.text("X=ROI%; Y=PnL $; each dot=token; winners sit upper-right.")
     try:
-        payload = {"address": address, "chain": chain_all, "date": {"from": from_iso, "to": to_iso}}
-        resp = client.profiler_address_pnl_summary(payload)
-        top5_df = pd.DataFrame(resp.get("top5_tokens", []))
+        top5_df = fetch_profiler_address_pnl_summary(client, address, chain_all, from_iso, to_iso)
         if top5_df.empty or not {"realized_roi", "realized_pnl", "token_symbol"}.issubset(top5_df.columns):
             st.info("We are unable to compute profit & loss (PnL) data for this wallet on the currently selected chain(s).")
             return

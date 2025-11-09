@@ -7,6 +7,20 @@ import networkx as nx
 from collections import defaultdict
 from nansen_client import NansenClient
 
+@st.cache_data(ttl=300)
+def fetch_related_wallets(_client, address, chain_tx):
+    payload = {
+        "address": address,
+        "chain": chain_tx,   # now uses the selected tx chain
+        "pagination": {"page": 1, "per_page": 10},
+        "order_by": [{"field": "order", "direction": "ASC"}],
+    }
+
+    items = _client.profiler_address_related_wallets(payload=payload)
+    df = pd.DataFrame(items)
+    
+    return df
+
 def _short_addr(a: str) -> str:
     return a[:8] + "…" + a[-4:] if isinstance(a, str) and len(a) > 12 else str(a)
 
@@ -103,14 +117,7 @@ def render_related_wallet_network(client: NansenClient, address: str, chain_tx: 
     st.text("Colour = relation; arrows=direction; thicker=more recent.")
 
     try:
-        payload = {
-            "address": address,
-            "chain": chain_tx,   # now uses the selected tx chain
-            "pagination": {"page": 1, "per_page": 10},
-            "order_by": [{"field": "order", "direction": "ASC"}],
-        }
-        resp = client.profiler_address_related_wallets(payload)
-        df = pd.DataFrame(resp)
+        df = fetch_related_wallets(client, address, chain_tx)
         if df.empty:
             st.info("No related wallets found.")
             return

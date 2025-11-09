@@ -1,17 +1,8 @@
 import streamlit as st
 from dataframes import historical_balances_to_dataframe
 
-def render_portfolio_trends_metrics(client, wallet, chain, from_iso, to_iso):
-    """
-    Render Top Token Concentration % and 30-Day Portfolio Growth % for a wallet.
-    
-    Args:
-        client: NansenClient instance
-        wallet: str, wallet address
-        chain: str, chain for portfolio data
-        from_iso: str, start datetime ISO string
-        to_iso: str, end datetime ISO string
-    """
+@st.cache_data(ttl=300)
+def fetch_historical_balances(_client, wallet, chain, from_iso, to_iso):
     payload = {
         "address": wallet,
         "chain": chain,
@@ -25,13 +16,24 @@ def render_portfolio_trends_metrics(client, wallet, chain, from_iso, to_iso):
         },
     }
 
-    # Fetch historical balances from Nansen Profiler API
-    data = client.profiler_address_historical_balances(payload=payload, fetch_all=True)
-    if not data:
-        st.warning("No portfolio data found for trend metrics.")
-        return
+    items = _client.profiler_address_historical_balances(payload=payload, fetch_all=True)
+    df = historical_balances_to_dataframe(items)
+    
+    return df
 
-    df = historical_balances_to_dataframe(data)
+def render_portfolio_trends_metrics(client, wallet, chain, from_iso, to_iso):
+    """
+    Render Top Token Concentration % and 30-Day Portfolio Growth % for a wallet.
+    
+    Args:
+        client: NansenClient instance
+        wallet: str, wallet address
+        chain: str, chain for portfolio data
+        from_iso: str, start datetime ISO string
+        to_iso: str, end datetime ISO string
+    """
+    # Fetch historical balances from Nansen Profiler API
+    df = fetch_historical_balances(client, wallet, chain, from_iso, to_iso)
     if df.empty:
         st.warning("No portfolio data found for trend metrics.")
         return

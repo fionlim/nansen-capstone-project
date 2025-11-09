@@ -5,20 +5,27 @@ import streamlit as st
 import plotly.express as px
 from nansen_client import NansenClient
 
+@st.cache_data(ttl=300)
+def fetch_historical_balances(_client, address, chain_all, from_iso, to_iso, hide_spam):
+    payload = {
+        "address": address,
+        "chain": chain_all,
+        "filters": {"hide_spam_tokens": hide_spam, "value_usd": {"min": 10}},
+        "date": {"from": from_iso, "to": to_iso},
+        "pagination": { "page": 1,"per_page": 100 }
+    }
+
+    items = _client.profiler_address_historical_balances(payload=payload, fetch_all=True)
+    df = pd.DataFrame(items)
+    
+    return df
+
 def render_token_share_stacked(client: NansenClient, address: str, chain_all: str, from_iso: str, to_iso: str, hide_spam: bool = True):
     st.subheader("Token Mix Over Time")
     st.text("100% stacked area (holdings > $10 only to remove dust); band thickness = daily portfolio share.")
 
     try:
-        payload = {
-            "address": address,
-            "chain": chain_all,
-            "filters": {"hide_spam_tokens": hide_spam, "value_usd": {"min": 10}},
-            "date": {"from": from_iso, "to": to_iso},
-            "pagination": { "page": 1,"per_page": 100 }
-        }
-        rows = client.profiler_address_historical_balances(payload, fetch_all=True)
-        df = pd.DataFrame(rows)
+        df = fetch_historical_balances(client, address, chain_all, from_iso, to_iso, hide_spam)
 
         if df.empty:
             st.info("No historical balances found for the selected date range.")

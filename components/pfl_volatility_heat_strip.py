@@ -5,20 +5,27 @@ import streamlit as st
 import plotly.graph_objects as go
 from nansen_client import NansenClient
 
+@st.cache_data(ttl=300)
+def fetch_historical_balances(_client, address, chain_all, from_iso, to_iso, hide_spam):
+    payload = {
+        "address": address,
+        "chain": chain_all,
+        "filters": {"hide_spam_tokens": hide_spam, "value_usd": {"min": 10}},
+        "date": {"from": from_iso, "to": to_iso},
+        "pagination": { "page": 1,"per_page": 100 }
+    }
+
+    items = _client.profiler_address_historical_balances(payload=payload, fetch_all=True)
+    df = pd.DataFrame(items)
+    
+    return df
+
 def render_volatility_heat_strip(client: NansenClient, address: str, chain_all: str, from_iso: str, to_iso: str, hide_spam: bool = True):
     st.subheader("Balance Volatility")
     st.text("Heatmap: red = higher 7-day std dev of USD balance; rows=tokens, cols=days.")
 
     try:
-        payload = {
-            "address": address,
-            "chain": chain_all,
-            "filters": {"hide_spam_tokens": hide_spam, "value_usd": {"min": 10}},
-            "date": {"from": from_iso, "to": to_iso},
-            "pagination": { "page": 1,"per_page": 100 }
-        }
-        rows = client.profiler_address_historical_balances(payload, fetch_all=True)
-        df = pd.DataFrame(rows)
+        df = fetch_historical_balances(client, address, chain_all, from_iso, to_iso, hide_spam)
         if df.empty:
             st.info("Insufficient data to compute volatility.")
             return
