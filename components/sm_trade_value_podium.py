@@ -1,31 +1,35 @@
 import streamlit as st
-from typing import Dict
 import plotly.graph_objects as go
 from nansen_client import NansenClient
 from dataframes import dex_trades_to_dataframe
 
+@st.cache_data(ttl=300)
+def fetch_dex_trades(chains, min_mc, max_mc, excl_labels):
+    client = NansenClient()
+    if "all" in chains:
+        chains = ["all"]
+    payload = {
+        "chains": chains,
+        "filters": {
+            "token_bought_market_cap": {
+                "min": min_mc, 
+                "max": max_mc
+            },
+            "exclude_smart_money_labels": excl_labels,
+        },
+        "pagination": {"page": 1, "per_page": 100},
+        "order_by": [{"field": "trade_value_usd", "direction": "DESC"}],
+    }
+
+    items = client.smart_money_dex_trades(payload=payload)
+    df = dex_trades_to_dataframe(items)
+
+    return df
+
 @st.fragment
 def render_dex_trades_podium(chains: list, min_mc: int, max_mc: int, excl_labels: list):
     try:
-        client = NansenClient()
-
-        if "all" in chains:
-            chains = ["all"]
-        payload = {
-            "chains": chains,
-            "filters": {
-                "token_bought_market_cap": {
-                    "min": min_mc,
-                    "max": max_mc
-                },
-                "exclude_smart_money_labels": excl_labels,
-            },
-            "pagination": {"page": 1, "per_page": 100},
-            "order_by": [{"field": "trade_value_usd", "direction": "DESC"}],
-        }
-
-        items = client.smart_money_dex_trades(payload=payload)
-        df = dex_trades_to_dataframe(items)
+        df = fetch_dex_trades(chains, min_mc, max_mc, excl_labels)
         if df.empty:
             st.warning("No DEX trades data returned for the selected filters.")
             return
