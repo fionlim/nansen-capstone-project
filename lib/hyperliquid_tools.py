@@ -5,6 +5,7 @@ from lib.hyperliquid_sdk import (
     get_available_trading_pairs,
     get_leverage,
     place_limit_order,
+    place_market_order,
 )
 
 
@@ -78,7 +79,7 @@ def get_hyperliquid_tools() -> Tuple[List[Dict[str, Any]], Dict[str, Callable]]:
                             "type": "boolean",
                             "description": "True for buy order, False for sell order.",
                         },
-                        "sz": {"type": "number", "description": "Size of the order."},
+                        "sz": {"type": "number", "description": "Notional size of the order."},
                         "limit_px": {
                             "type": "number",
                             "description": "Limit price for the order.",
@@ -101,6 +102,40 @@ def get_hyperliquid_tools() -> Tuple[List[Dict[str, Any]], Dict[str, Callable]]:
                 },
             },
         },
+        {
+            "type": "function",
+            "function": {
+                "name": "place_market_order",
+                "description": "Place a market order on Hyperliquid. This executes immediately at the best available price with slippage tolerance. Optionally set leverage before placing the order.",
+                "parameters": {
+                    "type": "object",
+                    "properties": {
+                        "coin": {
+                            "type": "string",
+                            "description": "The trading pair symbol (e.g., 'ETH', 'BTC').",
+                        },
+                        "is_buy": {
+                            "type": "boolean",
+                            "description": "True for buy order, False for sell order.",
+                        },
+                        "sz": {"type": "number", "description": "Notional size of the order."},
+                        "slippage": {
+                            "type": "number",
+                            "description": "Maximum slippage tolerance as decimal (e.g., 0.05 for 5%). Default is 0.05.",
+                        },
+                        "leverage": {
+                            "type": "integer",
+                            "description": "Optional leverage value to set before placing order (e.g., 10 for 10x leverage). If not provided, uses existing leverage setting.",
+                        },
+                        "is_cross": {
+                            "type": "boolean",
+                            "description": "If true, use cross margin, else isolated margin. Only used if leverage is set. Default is true (cross margin).",
+                        },
+                    },
+                    "required": ["coin", "is_buy", "sz"],
+                },
+            },
+        },
     ]
     
     # Build handler registry mapping function names to handlers
@@ -109,6 +144,7 @@ def get_hyperliquid_tools() -> Tuple[List[Dict[str, Any]], Dict[str, Callable]]:
         "get_available_trading_pairs": get_available_trading_pairs,
         "get_leverage": get_leverage,
         "place_limit_order": place_limit_order,
+        "place_market_order": place_market_order,
     }
 
     return tools, handler_registry
