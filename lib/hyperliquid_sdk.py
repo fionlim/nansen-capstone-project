@@ -225,6 +225,7 @@ def get_leverage(coin: str) -> Dict[str, Any]:
             "coin": coin,
         }
 
+
 # ============================================================================
 # ORDER PLACING FUNCTIONS
 # ============================================================================
@@ -490,3 +491,45 @@ def set_take_profit_stop_loss(
         }
 
 
+# ============================================================================
+# ORDER MANAGEMENT FUNCTIONS
+# ============================================================================
+
+
+def cancel_all_orders(coin: str) -> Dict[str, Any]:
+    """
+    Cancel all existing open orders on Hyperliquid by coin.
+
+    Args:
+        coin: Trading pair (e.g., "ETH", "BTC")
+
+    Returns:
+        dict: Cancel result
+    """
+    try:
+        address, info, exchange = get_hyperliquid_setup()
+
+        results = {
+            "status": "success",
+            "orders": [],
+        }
+
+        open_orders = info.open_orders(address)
+        for open_order in open_orders:
+            if open_order.get("coin") == coin:
+                order_id = open_order.get("oid")
+                cancel_result = exchange.cancel(coin, order_id)
+                results["orders"].append(
+                    {
+                        "type": "cancel",
+                        "order_id": order_id,
+                        "result": cancel_result,
+                    }
+                )
+
+        return results
+    except Exception as e:
+        return {
+            "status": "error",
+            "error": str(e),
+        }

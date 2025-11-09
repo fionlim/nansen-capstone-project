@@ -7,6 +7,7 @@ from lib.hyperliquid_sdk import (
     place_limit_order,
     place_market_order,
     set_take_profit_stop_loss,
+    cancel_all_orders,
 )
 
 
@@ -166,8 +167,31 @@ def get_hyperliquid_tools() -> Tuple[List[Dict[str, Any]], Dict[str, Callable]]:
                 },
             },
         },
+
+        # ============================================================================
+        # ORDER MANAGEMENT FUNCTIONS
+        # ============================================================================
+        
+        {
+            "type": "function",
+            "function": {
+                "name": "cancel_all_orders",
+                "description": "Cancel all existing open orders on Hyperliquid by coin.",
+                "parameters": {
+                    "type": "object",
+                    "properties": {
+                        "coin": {
+                            "type": "string",
+                            "description": "The trading pair symbol (e.g., 'ETH', 'BTC').",
+                        },
+                    },
+                    "required": ["coin"],
+                },
+            },
+        },
     ]
-    
+
+
     # Build handler registry mapping function names to handlers
     handler_registry = {
         "fetch_balances_positions": fetch_balances_and_positions,
@@ -176,6 +200,7 @@ def get_hyperliquid_tools() -> Tuple[List[Dict[str, Any]], Dict[str, Callable]]:
         "place_limit_order": place_limit_order,
         "place_market_order": place_market_order,
         "set_take_profit_stop_loss": set_take_profit_stop_loss,
+        "cancel_all_orders": cancel_all_orders,
     }
 
     return tools, handler_registry
