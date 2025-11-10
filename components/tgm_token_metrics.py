@@ -12,6 +12,24 @@ def format_delta_color(delta_value):
     else:
         return "normal"
 
+@st.cache_data(ttl=300)
+def fetch_trades(chain, token_address, from_datetime, to_datetime):
+    client = NansenClient()
+
+    payload = {
+        "chains": [chain],
+        "date": {
+            "from": from_datetime,
+            "to": to_datetime,
+        },
+        "filters": {"token_address": token_address},
+    }
+
+    items = client.tgm_token_screener(payload)
+    df = tgm_token_screener_to_dataframe(items)
+    
+    return df
+
 @st.fragment
 def render_token_metrics(token_address: str, chain: str, period: str):
 
@@ -52,18 +70,7 @@ def render_token_metrics(token_address: str, chain: str, period: str):
                 to_datetime = now.strftime("%Y-%m-%dT%H:%M:%SZ")
                 from_datetime = (now - period_mapping[period]).strftime("%Y-%m-%dT%H:%M:%SZ")
 
-                payload = {
-                    "chains": [chain],
-                    "date": {
-                        "from": from_datetime,
-                        "to": to_datetime,
-                    },
-                    "filters": {"token_address": token_address},
-                }
-
-                client = NansenClient()
-                items = client.tgm_token_screener(payload)
-                df = tgm_token_screener_to_dataframe(items)
+                df = fetch_trades(chain, token_address, from_datetime, to_datetime)
 
                 if not df.empty:
                     token_data = df.iloc[0]  # df should only have one row

@@ -30,7 +30,7 @@ if 'token' not in st.session_state:
 if 'chain' not in st.session_state:
     st.session_state.chain = 'ethereum'
 if 'period' not in st.session_state:
-    st.session_state.period = '1h'
+    st.session_state.period = '24h'
 if 'aggregate_by_entity' not in st.session_state:
     st.session_state.aggregate_by_entity = False
 
@@ -67,26 +67,21 @@ with st.form(key='input_form'):
         # Use session state token as default value (from URL or landing page)
         token = st.text_input(
             "Token address", 
-            value=st.session_state.token,
+            value=st.session_state.get("token", ""),
             placeholder="0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48"
         )
         if not token:
             st.info("👆 Enter a token address above to see detailed metrics")
     with c2:
         available_chains = ["ethereum", "solana", "arbitrum", "optimism", "base", "bnb", "polygon"]
-        # Find index of current chain in session state
-        try:
-            default_index = available_chains.index(st.session_state["chain"])
-        except ValueError:
-            default_index = 0
-        chain = st.selectbox("Chain", available_chains, index=default_index, key="chain")
+        chain = st.selectbox("Chain", available_chains, key="chain")
         # Only lowercase token if chain is not solana
         token_normalized = token.strip()
         if chain != "solana":
             token_normalized = token_normalized.lower()
         st.session_state.token = token_normalized
     with c3:
-        period = st.selectbox("Period", ["1h", "24h", "7d", "30d"], index=0, key="period")
+        period = st.selectbox("Period", ["1h", "24h", "7d", "30d"], key="period")
     with c4:
         st.markdown("<br>", unsafe_allow_html=True)
         submit = st.form_submit_button("🔄 Update Dashboard", width='stretch')
@@ -105,7 +100,7 @@ with right_col:
 st.subheader('Holder Distribution & Flows')
 col1, col2 = st.columns([1, 4])
 with col1:
-    aggregate_by_entity = st.selectbox('Aggregate by Entity', [False, True], index=0, key='aggregate_by_entity')
+    aggregate_by_entity = st.selectbox('Aggregate by Entity', [False, True], key='aggregate_by_entity')
 render_holders_donut_chart(st.session_state.chain, st.session_state.token, st.session_state.aggregate_by_entity)
 render_holder_flows_horizontal_bar_chart(st.session_state.chain, st.session_state.token, st.session_state.aggregate_by_entity)
 

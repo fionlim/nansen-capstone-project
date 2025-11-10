@@ -6,6 +6,50 @@ from dataframes import holders_to_dataframe
 import pandas as pd
 import plotly.graph_objects as go
 
+@st.cache_data(ttl=300)
+def fetch_holders(chain, token_address, aggregate_by_entity):
+    client = NansenClient()
+
+    payload = {
+        "chain": chain,
+        "token_address": token_address,
+        "aggregate_by_entity": aggregate_by_entity,
+        "label_type": "all_holders",
+        "pagination": {
+            "page": 1,
+            "per_page": 100
+        },
+        "filters": {
+            "include_smart_money_labels": [
+            "30D Smart Trader",
+            "Fund",
+            "90D Smart Trader",
+            "180D Smart Trader", 
+            "Smart Trader"
+                ],
+            "ownership_percentage": {
+            "min": 0.001
+            },
+            "token_amount": {
+            "min": 1000
+            },
+            "value_usd": {
+            "min": 10000
+            }
+        },
+        "order_by": [
+            {
+            "field": "ownership_percentage",
+            "direction": "DESC"
+            }
+        ]
+    }
+
+    items = client.tgm_holders(payload, fetch_all=True)
+    df = holders_to_dataframe(items)
+    
+    return df
+
 @st.fragment
 def render_holder_flows_horizontal_bar_chart(chain: str, token_address: str, aggregate_by_entity: bool):
     """
@@ -44,43 +88,7 @@ def render_holder_flows_horizontal_bar_chart(chain: str, token_address: str, agg
         st.plotly_chart(fig, width='stretch')
 
     else:
-        client = NansenClient()
-        payload = {
-            "chain": chain,
-            "token_address": token_address,
-            "aggregate_by_entity": aggregate_by_entity,
-            "label_type": "all_holders",
-            "pagination": {
-                "page": 1,
-                "per_page": 100
-            },
-            "filters": {
-                "include_smart_money_labels": [
-                "30D Smart Trader",
-                "Fund",
-                "90D Smart Trader",
-                "180D Smart Trader", 
-                "Smart Trader"
-                    ],
-                "ownership_percentage": {
-                "min": 0.001
-                },
-                "token_amount": {
-                "min": 1000
-                },
-                "value_usd": {
-                "min": 10000
-                }
-            },
-            "order_by": [
-                {
-                "field": "ownership_percentage",
-                "direction": "DESC"
-                }
-            ]
-        }
-        items = client.tgm_holders(payload, fetch_all=True)
-        df = holders_to_dataframe(items)
+        df = fetch_holders(chain, token_address, aggregate_by_entity)
 
         if df.empty:
             st.warning("No holder distribution data returned for the selected filters.")

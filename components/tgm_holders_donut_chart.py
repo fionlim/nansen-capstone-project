@@ -6,6 +6,50 @@ import pandas as pd
 from nansen_client import NansenClient
 from dataframes import holders_to_dataframe
 
+@st.cache_data(ttl=300)
+def fetch_holders(chain, token_address, aggregate_by_entity):
+    client = NansenClient()
+
+    payload = {
+        "chain": chain,
+        "token_address": token_address,
+        "aggregate_by_entity": aggregate_by_entity,
+        "label_type": "all_holders",
+        "pagination": {
+            "page": 1,
+            "per_page": 10 
+        },
+        "filters": {
+            "include_smart_money_labels": [
+            "30D Smart Trader",
+            "Fund",
+            "90D Smart Trader",
+            "180D Smart Trader", 
+            "Smart Trader"
+                ],
+            "ownership_percentage": {
+            "min": 0.001
+            },
+            "token_amount": {
+            "min": 1000
+            },
+            "value_usd": {
+            "min": 10000
+            }
+        },
+        "order_by": [
+            {
+            "field": "ownership_percentage",
+            "direction": "DESC"
+            }
+        ]
+    }
+
+    items = client.tgm_holders(payload, fetch_all=True)
+    df = holders_to_dataframe(items)
+    
+    return df
+
 @st.fragment
 def render_holders_donut_chart(chain: str, token_address: str, aggregate_by_entity: bool):
     columns = [
@@ -35,46 +79,9 @@ def render_holders_donut_chart(chain: str, token_address: str, aggregate_by_enti
         donut_cols[2].plotly_chart(fig3, width='stretch')
     
     else:
-        client = NansenClient()
-        payload = {
-            "chain": chain,
-            "token_address": token_address,
-            "aggregate_by_entity": aggregate_by_entity,
-            "label_type": "all_holders",
-            "pagination": {
-                "page": 1,
-                "per_page": 10 
-            },
-            "filters": {
-                "include_smart_money_labels": [
-                "30D Smart Trader",
-                "Fund",
-                "90D Smart Trader",
-                "180D Smart Trader", 
-                "Smart Trader"
-                    ],
-                "ownership_percentage": {
-                "min": 0.001
-                },
-                "token_amount": {
-                "min": 1000
-                },
-                "value_usd": {
-                "min": 10000
-                }
-            },
-            "order_by": [
-                {
-                "field": "ownership_percentage",
-                "direction": "DESC"
-                }
-            ]
-        }
-
         try:
             # holder_types = ['smart_money', 'exchange', 'whale', 'public_figure', 'all_holders']
-            items = client.tgm_holders(payload, fetch_all=True)
-            df = holders_to_dataframe(items)
+            df = fetch_holders(chain, token_address, aggregate_by_entity)
 
             if df.empty:
                 st.warning("No holder distribution data returned for the selected filters.")
@@ -107,8 +114,8 @@ def render_holders_donut_chart(chain: str, token_address: str, aggregate_by_enti
                                 with row_cols[i]:
                                     if col_name == "address":
                                         if st.button(f"{row[col_name][:20]}... 🔍", key=f"{row[col_name]}_{idx}"):
-                                            st.session_state["selected_wallet"] = row["address"]
-                                            st.session_state["selected_wallet_label"] = row["address_label"]
+                                            st.session_state["wallet"] = row["address"]
+                                            st.session_state["label"] = row["address_label"]
                                             st.switch_page("pages/3_Profiler_Dashboard.py")
                                     else:
                                         st.write(row[col_name])

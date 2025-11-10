@@ -6,19 +6,26 @@ import plotly.express as px
 import plotly.graph_objects as go
 from nansen_client import NansenClient
 
+@st.cache_data(ttl=300)
+def fetch_profiler_address_transactions(_client, address, chain_tx, from_iso, to_iso):
+    payload = {
+        "address": address,
+        "chain": chain_tx,
+        "date": {"from": from_iso, "to": to_iso},
+        "order_by": [{"field": "block_timestamp", "direction": "DESC"}],
+        "pagination": {"page": 1, "per_page": 20},
+    }
+
+    items = _client.profiler_address_transactions(payload, n=5)
+    df = pd.DataFrame(items)
+
+    return df
+
 def render_transactions_log_hist(client: NansenClient, address: str, chain_tx: str, from_iso: str, to_iso: str):
     st.text("Log-scaled USD/transaction with mean & median lines; shows small-vs-whale mix.")
 
     try:
-        payload = {
-            "address": address,
-            "chain": chain_tx,
-            "date": {"from": from_iso, "to": to_iso},
-            "order_by": [{"field": "block_timestamp", "direction": "DESC"}],
-            "pagination": {"page": 1, "per_page": 20},
-        }
-        rows = client.profiler_address_transactions(payload, n=5)
-        df = pd.DataFrame(rows)
+        df = fetch_profiler_address_transactions(client, address, chain_tx, from_iso, to_iso)
         if df.empty or "volume_usd" not in df.columns:
             st.info("No transactions found to plot.")
             return

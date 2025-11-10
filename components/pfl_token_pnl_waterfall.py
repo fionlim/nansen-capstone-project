@@ -5,17 +5,23 @@ import streamlit as st
 import plotly.graph_objects as go
 from nansen_client import NansenClient
 
+@st.cache_data(ttl=300)
+def fetch_profiler_address_pnl_summary(_client, address, chain_all, from_iso, to_iso):
+    payload = {
+        "address": address,
+        "chain": chain_all,
+        "date": {"from": from_iso, "to": to_iso},
+    }
+    items = _client.profiler_address_pnl_summary(payload)
+    df = pd.DataFrame(items.get("top5_tokens", []))
+
+    return df
+
 def render_token_pnl_waterfall(client: NansenClient, address: str, chain_all: str, from_iso: str, to_iso: str):
     st.subheader("PnL Drivers")
     st.text("Each bar = token’s realized PnL; up=gains, down=losses (last 30 days).")
     try:
-        payload = {
-            "address": address,
-            "chain": chain_all,
-            "date": {"from": from_iso, "to": to_iso},
-        }
-        resp = client.profiler_address_pnl_summary(payload)
-        top5_df = pd.DataFrame(resp.get("top5_tokens", []))
+        top5_df = fetch_profiler_address_pnl_summary(client, address, chain_all, from_iso, to_iso)
         if top5_df.empty or not {"token_symbol", "realized_pnl"}.issubset(top5_df.columns):
             st.info("We are unable to compute profit & loss (PnL) data for this wallet on the currently selected chain(s).")
             return

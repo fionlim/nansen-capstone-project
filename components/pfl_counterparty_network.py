@@ -8,6 +8,23 @@ import networkx as nx
 
 from nansen_client import NansenClient
 
+@st.cache_data(ttl=300)
+def fetch_counterparties(_client, address, chain_all, from_iso, to_iso):
+    payload = {
+        "address": address,
+        "chain": chain_all,
+        "source_input": "Combined",
+        "group_by": "wallet",
+        "date": {"from": from_iso, "to": to_iso},
+        "order_by": [{"field": "total_volume_usd", "direction": "DESC"}],
+        "pagination": {"page": 1, "per_page": 10},
+    }
+
+    items = _client.profiler_address_counterparties(payload=payload)
+    df = pd.DataFrame(items)
+    
+    return df
+
 def _short_addr(a: str) -> str:
     return a[:8] + "…" + a[-4:] if isinstance(a, str) and len(a) > 12 else str(a)
 
@@ -104,17 +121,7 @@ def render_counterparty_network(client: NansenClient, address: str, chain_all: s
     st.subheader("Top 10 Counterparties network")
     st.text("Node size = total volume; edge direction: in/out; thicker = bigger flow.")
     try:
-        payload = {
-            "address": address,
-            "chain": chain_all,
-            "source_input": "Combined",
-            "group_by": "wallet",
-            "date": {"from": from_iso, "to": to_iso},
-            "order_by": [{"field": "total_volume_usd", "direction": "DESC"}],
-            "pagination": {"page": 1, "per_page": 10},
-        }
-        rows = client.profiler_address_counterparties(payload) 
-        df = pd.DataFrame(rows)
+        df = fetch_counterparties(client, address, chain_all, from_iso, to_iso)
         if df.empty:
             st.info("No counterparty interactions found for the selected range.")
             return

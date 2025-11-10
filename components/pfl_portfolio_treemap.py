@@ -6,7 +6,8 @@ import plotly.express as px
 import plotly.graph_objects as go  # noqa: F401
 from nansen_client import NansenClient
 
-def _fetch_balances_df(client: NansenClient, address: str, chain_all: str, hide_spam: bool) -> pd.DataFrame:
+@st.cache_data(ttl=300)
+def _fetch_balances_df(_client: NansenClient, address: str, chain_all: str, hide_spam: bool) -> pd.DataFrame:
     payload = {
         "address": address,
         "chain": chain_all,
@@ -14,7 +15,7 @@ def _fetch_balances_df(client: NansenClient, address: str, chain_all: str, hide_
         "order_by": [{"field": "value_usd", "direction": "DESC"}],
         "pagination": {"page": 1, "per_page": 100}
     }
-    resp = client.profiler_address_current_balance(payload)
+    resp = _client.profiler_address_current_balance(payload)
     return pd.DataFrame(resp)
 
 @st.fragment

@@ -437,3 +437,36 @@ def related_wallets_to_dataframe(data: List[Dict]) -> pd.DataFrame:
     if "order" in df.columns:
         df["order"] = pd.to_numeric(df["order"], errors="coerce")
     return df
+
+#profiler/address/transactions
+def pfl_transactions_to_dataframe(data: List[Dict]) -> pd.DataFrame:
+    if not data:
+        return pd.DataFrame(
+            columns=[
+                "chain", "method",
+                "tokens_sent", "tokens_received",
+                "volume_usd", "block_timestamp",
+                "transaction_hash", "source_type"
+            ]
+        )
+    
+    df = pd.DataFrame(data)
+    if "volume_usd" in df.columns:
+        df["volume_usd"] = pd.to_numeric(df["volume_usd"], errors="coerce")
+
+    if "block_timestamp" in df.columns:
+        df["block_timestamp"] = pd.to_datetime(df["block_timestamp"], errors="coerce")
+
+    def clean_token_list(token_list):
+        if not isinstance(token_list, list):
+            return []
+        for token in token_list:
+            for field in ["token_amount", "price_usd", "value_usd"]:
+                if field in token:
+                    token[field] = pd.to_numeric(token[field], errors="coerce")
+        return token_list
+
+    df["tokens_sent"] = df["tokens_sent"].apply(clean_token_list)
+    df["tokens_received"] = df["tokens_received"].apply(clean_token_list)
+    
+    return df

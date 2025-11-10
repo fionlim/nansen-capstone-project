@@ -11,3 +11,4 @@ openai
 httpx
 hyperliquid-python-sdk
 eth-account
+streamlit_javascript
