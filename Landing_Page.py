@@ -25,21 +25,10 @@ def main():
     # User is logged in - show logout button and user info
     col1, col2 = st.columns([3, 1])
     with col1:
-        st.title("Nansen.ai Capstone Project")
+        st.title("Nansen.ai Sample Project")
     with col2:
         if st.button("Log out"):
             st.logout()
-
-    st.markdown("""
-        We leverage **Nansen’s API** to analyze blockchain data and uncover insights into wallet activity, 
-        token movements, and emerging trends.  
-
-        Built with **Python** and **Streamlit**, our platform combines powerful data processing 
-        (**pandas**), interactive visualizations (**Plotly** and **Pydeck**), and machine learning 
-        techniques (**scikit-learn**) to transform raw on-chain data into meaningful, easy-to-understand insights.  
-
-        🚀 Explore our dashboards to dive deeper into the world of **Web3 analytics**.
-    """)
     
     st.write(f"Hello, {st.user.name}!")
 

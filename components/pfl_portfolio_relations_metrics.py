@@ -43,7 +43,7 @@ def render_portfolio_relations_metrics(client, wallet, chain_all, chain_tx, from
         return
     if rw_df.empty:
         st.warning("No related wallet data found.")
-
+        return
     num_cp = cp_df["counterparty_address"].nunique()
     num_rw = rw_df["address"].nunique()
 
