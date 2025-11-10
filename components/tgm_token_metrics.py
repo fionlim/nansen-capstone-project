@@ -33,8 +33,8 @@ def render_token_metrics(token_address: str, chain: str, period: str):
 
                 # Calculate date range based on period
                 now = datetime.now(timezone.utc)
-                to_datetime = now.isoformat()
-                from_datetime = (now - period_mapping[period]).isoformat()
+                to_datetime = now.strftime("%Y-%m-%dT%H:%M:%SZ")
+                from_datetime = (now - period_mapping[period]).strftime("%Y-%m-%dT%H:%M:%SZ")
 
                 payload = {
                     "chains": [chain],

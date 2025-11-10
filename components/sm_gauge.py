@@ -43,8 +43,8 @@ def render_gauge_charts(token_address: str, chain: str, period: str):
                 with st.spinner("Fetching Smart Money data..."):
                     # Calculate date range
                     now = datetime.now(timezone.utc)
-                    to_datetime = now.isoformat()
-                    from_datetime = (now - period_mapping[period]).isoformat()
+                    to_datetime = now.strftime("%Y-%m-%dT%H:%M:%SZ")
+                    from_datetime = (now - period_mapping[period]).strftime("%Y-%m-%dT%H:%M:%SZ")
                     
                     # Initialize client
                     client = NansenClient()
