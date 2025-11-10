@@ -37,7 +37,6 @@ if 'aggregate_by_entity' not in st.session_state:
 # --- Priority: URL params > Landing Page > Empty ---
 # Set from URL query parameters if present
 if url_token:
-    st.session_state.token = url_token.strip().lower()
     if url_chain:
         # Validate chain is in available chains
         available_chains = ["ethereum", "solana", "arbitrum", "optimism", "base", "bnb", "polygon"]
@@ -45,11 +44,20 @@ if url_token:
             st.session_state.chain = url_chain.lower()
         else:
             st.warning(f"Invalid chain '{url_chain}'. Using default: ethereum")
+    # Only lowercase token if chain is not solana
+    token_normalized = url_token.strip()
+    if st.session_state.chain != "solana":
+        token_normalized = token_normalized.lower()
+    st.session_state.token = token_normalized
     st.info(f"📎 Loaded from URL: Token {st.session_state.token[:10]}... on {st.session_state.chain}")
 elif st.session_state.get("selected_token", ""):
     # Fallback to landing page prefilled token
     prefilled_token = st.session_state.get("selected_token", "")
-    st.session_state.token = prefilled_token.strip().lower()
+    # Only lowercase token if chain is not solana
+    token_normalized = prefilled_token.strip()
+    if st.session_state.chain != "solana":
+        token_normalized = token_normalized.lower()
+    st.session_state.token = token_normalized
     st.info(f"Auto-loaded token: {prefilled_token}")
 
 # --- Inputs ---
@@ -64,7 +72,6 @@ with st.form(key='input_form'):
         )
         if not token:
             st.info("👆 Enter a token address above to see detailed metrics")
-        st.session_state.token = token.strip().lower()
     with c2:
         available_chains = ["ethereum", "solana", "arbitrum", "optimism", "base", "bnb", "polygon"]
         # Find index of current chain in session state
@@ -73,8 +80,13 @@ with st.form(key='input_form'):
         except ValueError:
             default_index = 0
         chain = st.selectbox("Chain", available_chains, index=default_index, key="chain")
+        # Only lowercase token if chain is not solana
+        token_normalized = token.strip()
+        if chain != "solana":
+            token_normalized = token_normalized.lower()
+        st.session_state.token = token_normalized
     with c3:
-        period = st.selectbox("Period", ["1h", "24h", "7d", "30d"], index=1, key="period")
+        period = st.selectbox("Period", ["1h", "24h", "7d", "30d"], index=0, key="period")
     with c4:
         st.markdown("<br>", unsafe_allow_html=True)
         submit = st.form_submit_button("🔄 Update Dashboard", width='stretch')
