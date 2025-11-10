@@ -16,6 +16,22 @@ def format_delta_color(delta_value):
 def render_token_metrics(token_address: str, chain: str, period: str):
 
     st.subheader("Token Metrics")
+    # Add CSS to make metrics more compact and ensure numbers fit
+    st.markdown("""
+        <style>
+        div[data-testid="stMetricValue"] {
+            font-size: 0.9em !important;
+            word-break: break-word !important;
+            overflow-wrap: break-word !important;
+        }
+        div[data-testid="stMetricLabel"] {
+            font-size: 0.85em !important;
+        }
+        [data-testid="stMetricContainer"] {
+            min-width: 0 !important;
+        }
+        </style>
+    """, unsafe_allow_html=True)
     st.markdown("<br>", unsafe_allow_html=True)
 
     if token_address:
