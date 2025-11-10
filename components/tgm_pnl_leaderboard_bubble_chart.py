@@ -7,6 +7,60 @@ import plotly.graph_objects as go
 from nansen_client import NansenClient
 from dataframes import pnl_leaderboard_to_dataframe, pnl_summary_to_dataframe
 
+@st.cache_data(ttl=300)
+def fetch_token_leaderboard(chain, token_address, DATE_FROM, DATE_TO):
+    client = NansenClient()
+
+    payload = {
+        "chain": chain,
+        "token_address": token_address,
+        "date": {
+            "from": DATE_FROM,
+            "to": DATE_TO
+        },
+        "pagination": {
+            "page": 1,
+            "per_page": 100
+        },
+        "filters": {
+            "holding_usd": {
+                "min": 1000
+            },
+            "pnl_usd_realised": {
+                "min": 1000
+            }
+        },
+        "order_by": [
+            {
+                "field": "pnl_usd_realised",
+                "direction": "DESC"
+            }
+        ]
+    }
+
+    items = client.tgm_pnl_leaderboard(payload)
+    df = pnl_leaderboard_to_dataframe(items)
+    
+    return df
+
+@st.cache_data(ttl=300)
+def fetch_pfl_leaderboard(chain, leaderboard_df, DATE_FROM, DATE_TO):
+    client = NansenClient()
+
+    payload = [
+        {"chain": chain,
+        "address": trader_address,
+        "date": {
+            "from": DATE_FROM,
+            "to": DATE_TO
+        },
+        } for trader_address in leaderboard_df['trader_address'].tolist()]
+
+    items = client.pfl_address_pnl_summary(payload)
+    df = pnl_summary_to_dataframe(items)
+    
+    return df
+
 @st.fragment
 def render_pnl_leaderboard_bubble_chart(chain: str, token_address: str):
     if not token_address or not chain:
@@ -39,45 +93,12 @@ def render_pnl_leaderboard_bubble_chart(chain: str, token_address: str):
         st.plotly_chart(fig, use_container_width=True)
 
     else:
-        client = NansenClient()
         DATE_FROM = (dt.today() - pd.Timedelta(days=7)).strftime('%Y-%m-%d')  # one week ago
         DATE_TO = dt.today().strftime('%Y-%m-%d') # today
-        payload = {
-            "chain": chain,
-            "token_address": token_address,
-            "date": {
-                "from": DATE_FROM,
-                "to": DATE_TO
-            },
-            "pagination": {
-                "page": 1,
-                "per_page": 100
-            },
-            "filters": {
-                "holding_usd": {
-                    "min": 1000
-                },
-                "pnl_usd_realised": {
-                    "min": 1000
-                }
-            },
-            "order_by": [
-                {
-                    "field": "pnl_usd_realised",
-                    "direction": "DESC"
-                }
-            ]
-        }
         try:
-            leaderboard_items = client.tgm_pnl_leaderboard(payload)
-            leaderboard_df = pnl_leaderboard_to_dataframe(leaderboard_items)  # Limit to top 100 for performance
+            leaderboard_df = fetch_token_leaderboard(chain, token_address, DATE_FROM, DATE_TO)  # Limit to top 100 for performance
+            summary_df = fetch_pfl_leaderboard(chain, leaderboard_df, DATE_FROM, DATE_TO)
 
-            summary_payload = [{"chain": payload["chain"],
-                            "address": trader_address,
-                            "date": payload["date"]} for trader_address in leaderboard_df['trader_address'].tolist()]
-            
-            summary_items = client.pfl_address_pnl_summary(summary_payload)
-            summary_df = pnl_summary_to_dataframe(summary_items)
             df = pd.merge(leaderboard_df, summary_df, left_on='trader_address', right_on='address', how='left', suffixes=('', '_summary'))
             if df.empty:
                 st.warning("No PnL data returned for the selected filters.")
@@ -100,8 +121,8 @@ def render_pnl_leaderboard_bubble_chart(chain: str, token_address: str):
                     st.markdown("<br>", unsafe_allow_html=True)
                     if st.button("Go to Profile", use_container_width=True):
                         wallet_row = df_display[df_display['trader_address_label'] == selected_label].iloc[0]
-                        st.session_state["selected_wallet"] = wallet_row['trader_address']
-                        st.session_state["selected_wallet_label"] = wallet_row['trader_address_label']
+                        st.session_state["wallet"] = wallet_row['trader_address']
+                        st.session_state["label"] = wallet_row['trader_address_label']
                         st.switch_page("pages/3_Profiler_Dashboard.py")
 
                 # Create bubble chart

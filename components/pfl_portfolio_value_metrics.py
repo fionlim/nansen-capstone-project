@@ -1,7 +1,8 @@
 import streamlit as st
 from dataframes import historical_balances_to_dataframe
 
-def render_portfolio_value_metrics(client, wallet, chain_all, from_iso, to_iso):
+@st.cache_data(ttl=300)
+def fetch_historical_balances(_client, wallet, chain_all, from_iso, to_iso):
     payload = {
         "address": wallet,
         "chain": chain_all,
@@ -14,11 +15,14 @@ def render_portfolio_value_metrics(client, wallet, chain_all, from_iso, to_iso):
             "per_page": 100
         },
     }
-    data = client.profiler_address_historical_balances(payload=payload, fetch_all=True)
-    if not data:
-        st.warning("No portfolio data found.")
-        return
-    df = historical_balances_to_dataframe(data)
+
+    items = _client.profiler_address_historical_balances(payload=payload, fetch_all=True)
+    df = historical_balances_to_dataframe(items)
+    
+    return df
+
+def render_portfolio_value_metrics(client, wallet, chain_all, from_iso, to_iso):
+    df = fetch_historical_balances(client, wallet, chain_all, from_iso, to_iso)
     if df.empty:
         st.warning("No portfolio data found.")
         return

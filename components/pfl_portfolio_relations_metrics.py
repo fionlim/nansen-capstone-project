@@ -1,7 +1,8 @@
 import streamlit as st
 from dataframes import counterparties_to_dataframe, related_wallets_to_dataframe
 
-def render_portfolio_relations_metrics(client, wallet, chain_all, chain_tx, from_iso, to_iso):
+@st.cache_data(ttl=300)
+def fetch_counterparties(_client, wallet, chain_all, from_iso, to_iso):
     cp_payload = {
         "address": wallet,
         "chain": chain_all,
@@ -15,22 +16,28 @@ def render_portfolio_relations_metrics(client, wallet, chain_all, chain_tx, from
             "per_page": 100
         },
     }
+
+    items = _client.profiler_address_counterparties(payload=cp_payload, fetch_all=True)
+    df = counterparties_to_dataframe(items)
+    
+    return df
+
+@st.cache_data(ttl=300)
+def fetch_related_wallets(_client, wallet, chain_tx):
     rw_payload = {
         "address": wallet,
         "chain": chain_tx,
         "pagination": {"page": 1, "per_page": 100}
     }
-    cp_data = client.profiler_address_counterparties(payload=cp_payload, fetch_all=True)
-    rw_data = client.profiler_address_related_wallets(payload=rw_payload, fetch_all=True)
-    if not cp_data:
-        st.warning("No counterparty data found.")
-        return
-    if not rw_payload:
-        st.warning("No related wallet data found.")
-        return
 
-    cp_df = counterparties_to_dataframe(cp_data)
-    rw_df = related_wallets_to_dataframe(rw_data)
+    items = _client.profiler_address_related_wallets(payload=rw_payload, fetch_all=True)
+    df = counterparties_to_dataframe(items)
+    
+    return df
+
+def render_portfolio_relations_metrics(client, wallet, chain_all, chain_tx, from_iso, to_iso):
+    cp_df = fetch_counterparties(client, wallet, chain_all, from_iso, to_iso)
+    rw_df = fetch_related_wallets(client, wallet, chain_tx)
     if cp_df.empty:
         st.warning("No counterparty data found.")
         return

@@ -7,6 +7,50 @@ import plotly.graph_objects as go
 from nansen_client import NansenClient
 from dataframes import tgm_dex_trades_to_dataframe
 
+@st.cache_data(ttl=300)
+def fetch_tgm_dex_trades(chain, token_address):
+    client = NansenClient()
+    DATE_TO = dt.today().strftime('%Y-%m-%d') # today
+    DATE_FROM = (dt.today() - pd.Timedelta(days=2)).strftime('%Y-%m-%d')
+    
+    payload = {
+        "chain": chain,
+        "token_address": token_address,
+        "only_smart_money": False,
+        "date": {
+            "from": DATE_FROM,
+            "to": DATE_TO
+        },
+        "pagination": {
+            "page": 1,
+            "per_page": 100
+        },
+        "filters": {
+            "action": "BUY",
+            "estimated_value_usd": {
+                "min": 1000
+            },
+            "include_smart_money_labels": [
+                "Whale",
+                "Smart Trader"
+            ],
+            "token_amount": {
+                "min": 100
+            }
+        },
+        "order_by": [
+            {
+                "field": "block_timestamp",
+                "direction": "ASC"
+            }
+        ]
+    }
+
+    items = client.tgm_dex_trades(payload, fetch_all=True)
+    df = tgm_dex_trades_to_dataframe(items)
+    
+    return df
+
 @st.fragment
 def render_dex_trades_hourly(chain: str, token_address: str):
     if not token_address or not chain:
@@ -46,44 +90,8 @@ def render_dex_trades_hourly(chain: str, token_address: str):
         st.plotly_chart(fig, use_container_width=True)
 
     else:
-        client = NansenClient()
-        DATE_TO = dt.today().strftime('%Y-%m-%d') # today
-        DATE_FROM = (dt.today() - pd.Timedelta(days=2)).strftime('%Y-%m-%d') 
-        payload = {
-            "chain": chain,
-            "token_address": token_address,
-            "only_smart_money": False,
-            "date": {
-                "from": DATE_FROM,
-                "to": DATE_TO
-            },
-            "pagination": {
-                "page": 1,
-                "per_page": 100
-            },
-            "filters": {
-                "action": "BUY",
-                "estimated_value_usd": {
-                    "min": 1000
-                },
-                "include_smart_money_labels": [
-                    "Whale",
-                    "Smart Trader"
-                ],
-                "token_amount": {
-                    "min": 100
-                }
-            },
-            "order_by": [
-                {
-                    "field": "block_timestamp",
-                    "direction": "ASC"
-                }
-            ]
-        }
         try:
-            items = client.tgm_dex_trades(payload, fetch_all=True)
-            df = tgm_dex_trades_to_dataframe(items)
+            df = fetch_tgm_dex_trades(chain, token_address)
             if df.empty:
                 st.warning("No DEX trades data returned for the selected filters.")
             else:

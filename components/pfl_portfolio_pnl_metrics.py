@@ -1,7 +1,8 @@
 import streamlit as st
 from dataframes import single_pnl_summary_to_dataframe
 
-def render_portfolio_pnl_metrics(client, wallet, chain_all, from_iso, to_iso):
+@st.cache_data(ttl=300)
+def fetch_profiler_address_pnl_summary(_client, wallet, chain_all, from_iso, to_iso):
     payload = {
         "address": wallet,
         "chain": chain_all,
@@ -11,13 +12,15 @@ def render_portfolio_pnl_metrics(client, wallet, chain_all, from_iso, to_iso):
         },
     }
 
-    data = client.profiler_address_pnl_summary(payload=payload)
+    items = _client.profiler_address_pnl_summary(payload=payload)
+    df = single_pnl_summary_to_dataframe(items)
+    
+    return df
 
-    if not data:
-        st.warning("No pnl data found.")
-        return
+def render_portfolio_pnl_metrics(client, wallet, chain_all, from_iso, to_iso):
 
-    df = single_pnl_summary_to_dataframe(data)
+
+    df = fetch_profiler_address_pnl_summary(client, wallet, chain_all, from_iso, to_iso)
     if df.empty:
         st.warning("No pnl data found.")
         return
