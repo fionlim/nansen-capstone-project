@@ -7,6 +7,7 @@ from components.tgm_dextrades_combo_chart import render_dex_trades_hourly
 from components.tgm_token_metrics import render_token_metrics
 from components.sm_gauge import render_gauge_charts
 from components.llamaswap_iframe import render_llamaswap_iframe
+from components.tgm_dashboard_summary import render_dashboard_summary
 
 st.set_page_config(page_title="TGM Dashboard", layout="wide")
 st.title("TGM Dashboard")
@@ -86,6 +87,12 @@ with st.form(key='input_form'):
         st.markdown("<br>", unsafe_allow_html=True)
         submit = st.form_submit_button("🔄 Update Dashboard", width='stretch')
 
+# Placeholder for summary at the top (filled after all components run)
+summary_placeholder = st.empty()
+with summary_placeholder.container():
+    with st.expander("**AI Summary**", expanded=False):
+        st.text("Preparing summary…")
+
 # --- Top layout: Smart Money Gauges on left, Token metrics on right ---
 
 left_col, right_col = st.columns(2, gap="large")
@@ -113,3 +120,8 @@ render_dex_trades_hourly(st.session_state.chain, st.session_state.token)
 # --- Bottom layout: LlamaSwap Widget ---
 st.subheader('Swap via LlamaSwap')
 render_llamaswap_iframe(st.session_state.chain, st.session_state.token)
+
+# Update summary in the placeholder after all components have stored their data
+with summary_placeholder.container():
+    with st.expander("**AI Summary**", expanded=False):
+        render_dashboard_summary()

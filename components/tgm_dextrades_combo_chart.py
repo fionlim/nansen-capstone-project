@@ -108,6 +108,19 @@ def render_dex_trades_hourly(chain: str, token_address: str):
                     transactions_count=('block_timestamp', 'count'),
                     traded_token_amount=('traded_token_amount', 'sum')
                 ).reset_index()
+                
+                # Store summarized data for AI summary
+                st.session_state.tgm_dex_trades_summary = {
+                    "total_trades_24h": len(df_24h),
+                    "total_volume_24h": float(df_24h['traded_token_amount'].sum()) if 'traded_token_amount' in df_24h.columns else 0,
+                    "hourly_breakdown": hourly_agg.to_dict('records'),
+                    "peak_hour": {
+                        "hour": int(hourly_agg.loc[hourly_agg['transactions_count'].idxmax(), 'hour']) if not hourly_agg.empty else None,
+                        "transactions": int(hourly_agg['transactions_count'].max()) if not hourly_agg.empty else 0,
+                        "volume": float(hourly_agg.loc[hourly_agg['traded_token_amount'].idxmax(), 'traded_token_amount']) if not hourly_agg.empty else 0,
+                    },
+                    "avg_trade_size": float(df_24h['traded_token_amount'].mean()) if 'traded_token_amount' in df_24h.columns and len(df_24h) > 0 else 0,
+                }
 
                 # Combined line-bar chart
                 fig = go.Figure()

@@ -86,6 +86,35 @@ def render_holders_donut_chart(chain: str, token_address: str, aggregate_by_enti
             if df.empty:
                 st.warning("No holder distribution data returned for the selected filters.")
             else:
+                # Store summarized data for AI summary
+                holder_types = df['holder_type'].unique()
+                holder_distribution = {}
+                for htype in holder_types:
+                    htype_df = df[df['holder_type'] == htype]
+                    holder_distribution[htype] = {
+                        "count": int(htype_df['address'].nunique()),
+                        "total_value_usd": float(htype_df['value_usd'].sum()) if 'value_usd' in htype_df.columns else 0,
+                        "avg_ownership_pct": float(htype_df['ownership_percentage'].mean()) if 'ownership_percentage' in htype_df.columns else 0,
+                        "total_token_amount": float(htype_df['token_amount'].sum()) if 'token_amount' in htype_df.columns else 0,
+                    }
+                
+                # Top 5 holders
+                top_5_holders = df.nlargest(5, 'value_usd')[
+                    ['address_label', 'value_usd', 'ownership_percentage', 'holder_type']
+                ].to_dict('records')
+                
+                # Concentration metrics
+                top_10_ownership = float(df.nlargest(10, 'ownership_percentage')['ownership_percentage'].sum()) if len(df) >= 10 else float(df['ownership_percentage'].sum())
+                
+                st.session_state.tgm_holders_summary = {
+                    "total_holders": len(df),
+                    "holder_distribution": holder_distribution,
+                    "top_5_holders": top_5_holders,
+                    "concentration": {
+                        "top_10_ownership_pct": top_10_ownership
+                    }
+                }
+                
                 df_display = df.copy()
 
                 num_cols = [

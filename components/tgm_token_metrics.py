@@ -58,6 +58,38 @@ def render_token_metrics(token_address: str, chain: str, period: str):
 
                 if not df.empty:
                     token_data = df.iloc[0]  # df should only have one row
+                    
+                    # Fetch raw data for summary (before formatting)
+                    client = NansenClient()
+                    payload = {
+                        "chains": [chain],
+                        "date": {
+                            "from": from_datetime,
+                            "to": to_datetime,
+                        },
+                        "filters": {"token_address": token_address},
+                    }
+                    raw_items = client.tgm_token_screener(payload)
+                    
+                    # Store summarized data for AI summary - extract raw numeric values
+                    if raw_items and len(raw_items) > 0:
+                        raw_item = raw_items[0]
+                        st.session_state.tgm_token_metrics_summary = {
+                            "token_symbol": raw_item.get("token_symbol", "N/A"),
+                            "token_age_days": float(raw_item.get("token_age_days", 0)) if raw_item.get("token_age_days") is not None else None,
+                            "price_usd": float(raw_item.get("price_usd", 0)) if raw_item.get("price_usd") is not None else None,
+                            "price_change": float(raw_item.get("price_change", 0)) if raw_item.get("price_change") is not None else None,
+                            "market_cap_usd": float(raw_item.get("market_cap_usd", 0)) if raw_item.get("market_cap_usd") is not None else None,
+                            "volume": float(raw_item.get("volume", 0)) if raw_item.get("volume") is not None else None,
+                            "liquidity": float(raw_item.get("liquidity", 0)) if raw_item.get("liquidity") is not None else None,
+                            "fdv": float(raw_item.get("fdv", 0)) if raw_item.get("fdv") is not None else None,
+                            "buy_volume": float(raw_item.get("buy_volume", 0)) if raw_item.get("buy_volume") is not None else None,
+                            "sell_volume": float(raw_item.get("sell_volume", 0)) if raw_item.get("sell_volume") is not None else None,
+                            "netflow": float(raw_item.get("netflow", 0)) if raw_item.get("netflow") is not None else None,
+                            "fdv_mc_ratio": float(raw_item.get("fdv_mc_ratio", 0)) if raw_item.get("fdv_mc_ratio") is not None else None,
+                            "inflow_fdv_ratio": float(raw_item.get("inflow_fdv_ratio", 0)) if raw_item.get("inflow_fdv_ratio") is not None else None,
+                            "outflow_fdv_ratio": float(raw_item.get("outflow_fdv_ratio", 0)) if raw_item.get("outflow_fdv_ratio") is not None else None,
+                        }
 
                     # Show token symbol and age
                     col_info1, col_info2 = st.columns(2)

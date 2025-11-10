@@ -103,6 +103,35 @@ def render_pnl_leaderboard_bubble_chart(chain: str, token_address: str):
             if df.empty:
                 st.warning("No PnL data returned for the selected filters.")
             else:
+                # Store summarized data for AI summary
+                df_clean = df.dropna(subset=['pnl_usd_realised', 'pnl_usd_unrealised'])
+                if not df_clean.empty:
+                    st.session_state.tgm_pnl_summary = {
+                        "total_traders": len(df_clean),
+                        "summary_stats": {
+                            "avg_realized_pnl": float(df_clean['pnl_usd_realised'].mean()) if 'pnl_usd_realised' in df_clean.columns else 0,
+                            "median_realized_pnl": float(df_clean['pnl_usd_realised'].median()) if 'pnl_usd_realised' in df_clean.columns else 0,
+                            "avg_unrealized_pnl": float(df_clean['pnl_usd_unrealised'].mean()) if 'pnl_usd_unrealised' in df_clean.columns else 0,
+                            "avg_win_rate": float(df_clean['win_rate'].mean()) if 'win_rate' in df_clean.columns else 0,
+                            "total_realized_pnl": float(df_clean['pnl_usd_realised'].sum()) if 'pnl_usd_realised' in df_clean.columns else 0,
+                            "total_unrealized_pnl": float(df_clean['pnl_usd_unrealised'].sum()) if 'pnl_usd_unrealised' in df_clean.columns else 0,
+                        },
+                        "top_5_profitable": df_clean.nlargest(5, 'pnl_usd_realised')[
+                            ['trader_address_label', 'pnl_usd_realised', 'pnl_usd_unrealised', 'win_rate', 'holding_usd']
+                        ].to_dict('records') if len(df_clean) >= 5 else df_clean[
+                            ['trader_address_label', 'pnl_usd_realised', 'pnl_usd_unrealised', 'win_rate', 'holding_usd']
+                        ].to_dict('records'),
+                        "top_5_unrealized": df_clean.nlargest(5, 'pnl_usd_unrealised')[
+                            ['trader_address_label', 'pnl_usd_realised', 'pnl_usd_unrealised', 'win_rate']
+                        ].to_dict('records') if len(df_clean) >= 5 else df_clean[
+                            ['trader_address_label', 'pnl_usd_realised', 'pnl_usd_unrealised', 'win_rate']
+                        ].to_dict('records'),
+                        "distribution": {
+                            "profitable_count": int((df_clean['pnl_usd_realised'] > 0).sum()) if 'pnl_usd_realised' in df_clean.columns else 0,
+                            "unrealized_profitable_count": int((df_clean['pnl_usd_unrealised'] > 0).sum()) if 'pnl_usd_unrealised' in df_clean.columns else 0,
+                        }
+                    }
+                
                 col1, col2, col3 = st.columns([3, 2, 1])
                 df_display = df.dropna(subset=['pnl_usd_realised', 'pnl_usd_unrealised', 'trader_address_label'])
                 
