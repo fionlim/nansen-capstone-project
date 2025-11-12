@@ -4,18 +4,25 @@ This project demonstrates how Nansen's API can help visualize onchain data revol
 
 ## Setup
 
-1. Create a `.streamlit/secrets.toml` file in the project root.
+1. Refer to `.streamlit/secrets.toml.example` and create a `secrets.toml` file in the same directory.
 
 ```toml
-apiKey = "YOUR_NANSEN_API_KEY"
-NANSEN_BASE_URL= "https://api.nansen.ai/api/v1"
+nansen_api_key = "your_api_key_here"
+openai_api_key= "your_openai_api_key_here"
+
+nansen_api_url = "https://api.nansen.ai/api/v1" # v1 example
+nansen_mcp_url = "https://mcp.nansen.ai/ra/mcp/"
+
+[hl]
+secret_key = "" # get from app.hyperliquid-testnet.xyz/API for testnet or app.hyperliquid.xyz/API for mainnet
+account_address = "" # not the api wallet address, but your wallet address
 
 [auth]
-redirect_uri = "YOUR_REDIRECT_URI"
-cookie_secret = "YOUR_COOKIE_SECRET"
-client_id = "YOUR_CLIENT_ID"
-client_secret = "YOUR_CLIENT_SECRET"
-server_metadata_url = "YOUR_SERVER_METADATA_URL"
+redirect_uri = "http://localhost:8501/oauth2callback" # or your deployed URL
+cookie_secret = "your_cookie_secret_here"
+client_id = "your_client_id_here"
+client_secret = "your_client_secret_here"
+server_metadata_url = "your_server_metadata_url_here" # if using Google OAuth: https://accounts.google.com/.well-known/openid-configuration
 ```
 
 **Note:**

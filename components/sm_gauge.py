@@ -36,6 +36,8 @@ def render_gauge_charts(token_address: str, chain: str, period: str):
     Stores results in session state instead of returning values.
     """
     
+    st.subheader("% of Smart Money Transactions")
+    
     # Initialize default values
     total_trades = 0
     smart_trades = 0
@@ -47,24 +49,24 @@ def render_gauge_charts(token_address: str, chain: str, period: str):
     # Only fetch data if all inputs are provided
     if token_address and chain and period:
         try:
-            # Period validation
-            period_mapping = {
-                "1h": timedelta(hours=1),
-                "24h": timedelta(hours=24),
-                "7d": timedelta(days=7),
-                "30d": timedelta(days=30),
-            }
-            
-            if period not in period_mapping:
-                valid_periods = ", ".join(period_mapping.keys())
-                st.error(f"❌ Invalid period: {period}. Must be one of: {valid_periods}")
-            else:
-                # Show loading spinner during data fetch
-                with st.spinner("Fetching Smart Money data..."):
+            # Show loading spinner during data fetch
+            with st.spinner("Fetching Smart Money data..."):
+                # Period validation
+                period_mapping = {
+                    "1h": timedelta(hours=1),
+                    "24h": timedelta(hours=24),
+                    "7d": timedelta(days=7),
+                    "30d": timedelta(days=30),
+                }
+                
+                if period not in period_mapping:
+                    valid_periods = ", ".join(period_mapping.keys())
+                    st.error(f"❌ Invalid period: {period}. Must be one of: {valid_periods}")
+                else:
                     # Calculate date range
                     now = datetime.now(timezone.utc)
-                    to_datetime = now.isoformat()
-                    from_datetime = (now - period_mapping[period]).isoformat()
+                    to_datetime = now.strftime("%Y-%m-%dT%H:%M:%SZ")
+                    from_datetime = (now - period_mapping[period]).strftime("%Y-%m-%dT%H:%M:%SZ")
                     
                     # Convert to dataframes
                     df_all = fetch_trades(chain, token_address, from_datetime, to_datetime, False)
@@ -108,7 +110,6 @@ def render_gauge_charts(token_address: str, chain: str, period: str):
             return "#10b981"  # green
     
     # Always render gauges (empty or with data)
-    st.subheader("% of Smart Money Transactions")
     fig1 = go.Figure(
         go.Indicator(
             mode="gauge+number",
@@ -121,37 +122,34 @@ def render_gauge_charts(token_address: str, chain: str, period: str):
         )
     )
     fig1.update_layout(height=250, margin=dict(l=10, r=10, t=30, b=20))
-    st.plotly_chart(fig1, use_container_width=True, key="gauge1")
+    st.plotly_chart(fig1, width='stretch', key="gauge1")
     
     if has_data:
         st.caption(
             f"📊 {smart_trades:,} of {total_trades:,} dex trades in the last {period} were by smart money"
         )
-    else:
-        st.caption("👆 Enter a token address above to see metrics")
     
-    # Second Gauge
-    st.subheader("% of Unique Smart Money Wallets")
-    fig2 = go.Figure(
-        go.Indicator(
-            mode="gauge+number",
-            value=gauge_2_value,
-            number={"suffix": "%", "font": {"size": 18}, "valueformat": ".2f"},
-            gauge={
-                "axis": {"visible": False, "range": [0, 100]},
-                "bar": {"color": get_bar_color(gauge_2_value) if has_data else "#d1d5db"}  # gray if no data
-            },
+    # Second Gauge - only shows if first gauge is not 0
+    if gauge_1_value != 0:
+        st.subheader("% of Unique Smart Money Wallets")
+        fig2 = go.Figure(
+            go.Indicator(
+                mode="gauge+number",
+                value=gauge_2_value,
+                number={"suffix": "%", "font": {"size": 18}, "valueformat": ".2f"},
+                gauge={
+                    "axis": {"visible": False, "range": [0, 100]},
+                    "bar": {"color": get_bar_color(gauge_2_value) if has_data else "#d1d5db"}  # gray if no data
+                },
+            )
         )
-    )
-    fig2.update_layout(height=250, margin=dict(l=10, r=10, t=30, b=20))
-    st.plotly_chart(fig2, use_container_width=True, key="gauge2")
-    
-    if has_data:
-        st.caption(
-            f"🏛️ {unique_smart_addresses:,} unique addresses in {smart_trades:,} smart money trades"
-        )
-    else:
-        st.caption("👆 Enter a token address above to see metrics")
+        fig2.update_layout(height=250, margin=dict(l=10, r=10, t=30, b=20))
+        st.plotly_chart(fig2, width='stretch', key="gauge2")
+        
+        if has_data:
+            st.caption(
+                f"🏛️ {unique_smart_addresses:,} unique addresses in {smart_trades:,} smart money trades"
+            )
     
     st.session_state.gauge_data = {
         "smart_money_percentage": round(gauge_1_value, 2),

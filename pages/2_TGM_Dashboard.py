@@ -7,6 +7,7 @@ from components.tgm_dextrades_combo_chart import render_dex_trades_hourly
 from components.tgm_token_metrics import render_token_metrics
 from components.sm_gauge import render_gauge_charts
 from components.llamaswap_iframe import render_llamaswap_iframe
+from components.tgm_dashboard_summary import render_dashboard_summary
 
 st.set_page_config(page_title="TGM Dashboard", layout="wide")
 st.title("TGM Dashboard")
@@ -19,6 +20,11 @@ if not st.user.is_logged_in:
         st.login()
     st.stop()
 
+# --- Handle URL Query Parameters ---
+query_params = st.query_params
+url_token = query_params.get("token", "")
+url_chain = query_params.get("chain", "")
+
 # Initialize session
 if 'token' not in st.session_state:
     st.session_state.token = ''
@@ -29,10 +35,37 @@ if 'period' not in st.session_state:
 if 'aggregate_by_entity' not in st.session_state:
     st.session_state.aggregate_by_entity = False
 
+# --- Priority: URL params > Landing Page > Empty ---
+# Set from URL query parameters if present
+if url_token:
+    if url_chain:
+        # Validate chain is in available chains
+        available_chains = ["ethereum", "solana", "arbitrum", "optimism", "base", "bnb", "polygon"]
+        if url_chain.lower() in available_chains:
+            st.session_state.chain = url_chain.lower()
+        else:
+            st.warning(f"Invalid chain '{url_chain}'. Using default: ethereum")
+    # Only lowercase token if chain is not solana
+    token_normalized = url_token.strip()
+    if st.session_state.chain != "solana":
+        token_normalized = token_normalized.lower()
+    st.session_state.token = token_normalized
+    st.info(f"📎 Loaded from URL: Token {st.session_state.token[:10]}... on {st.session_state.chain}")
+elif st.session_state.get("selected_token", ""):
+    # Fallback to landing page prefilled token
+    prefilled_token = st.session_state.get("selected_token", "")
+    # Only lowercase token if chain is not solana
+    token_normalized = prefilled_token.strip()
+    if st.session_state.chain != "solana":
+        token_normalized = token_normalized.lower()
+    st.session_state.token = token_normalized
+    st.info(f"Auto-loaded token: {prefilled_token}")
+
 # --- Inputs ---
 with st.form(key='input_form'):
     c1, c2, c3, c4 = st.columns([2, 1, 1, 1])
     with c1:
+        # Use session state token as default value (from URL or landing page)
         token = st.text_input(
             "Token address", 
             value=st.session_state.get("token", ""),
@@ -40,15 +73,25 @@ with st.form(key='input_form'):
         )
         if not token:
             st.info("👆 Enter a token address above to see detailed metrics")
-        st.session_state.token = token.strip().lower()
     with c2:
         available_chains = ["ethereum", "solana", "arbitrum", "optimism", "base", "bnb", "polygon"]
         chain = st.selectbox("Chain", available_chains, key="chain")
+        # Only lowercase token if chain is not solana
+        token_normalized = token.strip()
+        if chain != "solana":
+            token_normalized = token_normalized.lower()
+        st.session_state.token = token_normalized
     with c3:
         period = st.selectbox("Period", ["1h", "24h", "7d", "30d"], key="period")
     with c4:
         st.markdown("<br>", unsafe_allow_html=True)
-        submit = st.form_submit_button("🔄 Update Dashboard", use_container_width=True)
+        submit = st.form_submit_button("🔄 Update Dashboard", width='stretch')
+
+# Placeholder for summary at the top (filled after all components run)
+summary_placeholder = st.empty()
+with summary_placeholder.container():
+    with st.expander("**AI Summary**", expanded=False):
+        st.text("Preparing summary…")
 
 # --- Top layout: Smart Money Gauges on left, Token metrics on right ---
 
@@ -77,3 +120,8 @@ render_dex_trades_hourly(st.session_state.chain, st.session_state.token)
 # --- Bottom layout: LlamaSwap Widget ---
 st.subheader('Swap via LlamaSwap')
 render_llamaswap_iframe(st.session_state.chain, st.session_state.token)
+
+# Update summary in the placeholder after all components have stored their data
+with summary_placeholder.container():
+    with st.expander("**AI Summary**", expanded=False):
+        render_dashboard_summary()

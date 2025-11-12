@@ -85,7 +85,7 @@ def render_holder_flows_horizontal_bar_chart(chain: str, token_address: str, agg
             showlegend=True,
             xaxis=dict(zeroline=True, zerolinewidth=2, zerolinecolor='gray')
         )
-        st.plotly_chart(fig, use_container_width=True)
+        st.plotly_chart(fig, width='stretch')
 
     else:
         df = fetch_holders(chain, token_address, aggregate_by_entity)
@@ -97,6 +97,25 @@ def render_holder_flows_horizontal_bar_chart(chain: str, token_address: str, agg
             'total_inflow': 'sum',
             'total_outflow': 'sum'
         }).reset_index()
+        
+        # Store summarized data for AI summary
+        holder_type_flows = {}
+        net_flow_by_type = {}
+        for _, row in agg.iterrows():
+            htype = row['holder_type']
+            inflow = float(row['total_inflow'])
+            outflow = float(row['total_outflow'])
+            holder_type_flows[htype] = {
+                "inflow": inflow,
+                "outflow": outflow
+            }
+            net_flow_by_type[htype] = inflow - outflow
+        
+        st.session_state.tgm_holder_flows_summary = {
+            "holder_type_flows": holder_type_flows,
+            "net_flow_by_type": net_flow_by_type
+        }
+        
         agg['total_outflow'] = -agg['total_outflow']
         fig = go.Figure()
         fig.add_trace(go.Bar(
@@ -125,5 +144,5 @@ def render_holder_flows_horizontal_bar_chart(chain: str, token_address: str, agg
             showlegend=True,
             xaxis=dict(zeroline=True, zerolinewidth=2, zerolinecolor='gray')
         )
-        st.plotly_chart(fig, use_container_width=True)
+        st.plotly_chart(fig, width='stretch')
 

@@ -2,8 +2,8 @@ import requests
 import streamlit as st
 from typing import Dict, List
 
-API_BASE = st.secrets.get("NANSEN_API_BASE", "https://api.nansen.ai/api/v1")
-API_KEY = st.secrets.get("apiKey", "")
+API_BASE = st.secrets.get("nansen_api_url", "")
+API_KEY = st.secrets.get("nansen_api_key", "")
 
 class NansenClient:
     def __init__(self):

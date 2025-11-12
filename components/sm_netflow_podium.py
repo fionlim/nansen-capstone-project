@@ -87,7 +87,7 @@ def render_netflow_podium(chains: list, min_mc: int, max_mc: int, excl_labels: l
             showlegend=False,
         )
 
-        st.plotly_chart(fig, use_container_width=True)
+        st.plotly_chart(fig, width='stretch')
 
         cols = st.columns(len(podium_df))
         for i, col in enumerate(cols):
@@ -99,7 +99,7 @@ def render_netflow_podium(chains: list, min_mc: int, max_mc: int, excl_labels: l
             with col:
                 if st.button(f"**{token_symbol}** ({chain})\n**${net_flow_value:,.0f}**",
                              key=f"netflow_{token_address}",
-                             use_container_width=True):
+                             width='stretch'):
                     st.session_state["token"] = token_address
                     st.session_state["chain"] = chain
                     st.switch_page("pages/2_TGM_Dashboard.py")

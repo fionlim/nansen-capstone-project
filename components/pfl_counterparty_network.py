@@ -179,7 +179,7 @@ def render_counterparty_network(client: NansenClient, address: str, chain_all: s
             legend=dict(orientation="h", yanchor="bottom", y=1.08, xanchor="left", x=0),
             margin=dict(t=100, l=10, r=10, b=10),
         )
-        st.plotly_chart(fig, use_container_width=True)
+        st.plotly_chart(fig, width='stretch')
 
         counterparty_options = df["label"].tolist()
         col1, col2 = st.columns(2)

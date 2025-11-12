@@ -98,7 +98,7 @@ def render_dex_trades_podium(chains: list, min_mc: int, max_mc: int, excl_labels
             showlegend=False,
         )
 
-        st.plotly_chart(fig, use_container_width=True)    
+        st.plotly_chart(fig, width='stretch')    
   
         cols = st.columns(len(podium_df))
         for i, col in enumerate(cols):
@@ -108,7 +108,7 @@ def render_dex_trades_podium(chains: list, min_mc: int, max_mc: int, excl_labels
             chain = podium_df.iloc[i]["chain"]
             with col:
                 if st.button(f"{token_symbol}({chain})\n${trade_value:,.0f}", 
-                             key=token_address, use_container_width=True):
+                             key=token_address, width='stretch'):
                     st.session_state["token"] = token_address
                     st.session_state["chain"] = chain
                     st.switch_page("pages/2_TGM_Dashboard.py")

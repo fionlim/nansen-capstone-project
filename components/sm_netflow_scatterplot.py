@@ -42,7 +42,7 @@ def render_netflow_scatterplot():
                 selected_token = st.selectbox("Select a token", df['token_symbol'].unique(), index=0, label_visibility="hidden", key='scatterplot_token')
             with col8:
                 st.markdown("<br>", unsafe_allow_html=True)
-                if st.button("Get Metrics", use_container_width=True, key='scatterplot_button'):
+                if st.button("Get Metrics", width='stretch', key='scatterplot_button'):
                     st.session_state["token"] = df.loc[df["token_symbol"] == selected_token, "token_address"].iloc[0]
                     st.session_state["chain"] = df.loc[df["token_symbol"] == selected_token, "chain"].iloc[0]
                     st.switch_page("pages/2_TGM_Dashboard.py")
@@ -94,6 +94,6 @@ def render_netflow_scatterplot():
             margin=dict(t=40)
         )
 
-        st.plotly_chart(fig, use_container_width=True)
+        st.plotly_chart(fig, width='stretch')
     except Exception as e:
         st.error(f"Unexpected error: {e}")

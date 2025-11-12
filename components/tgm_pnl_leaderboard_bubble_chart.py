@@ -90,7 +90,7 @@ def render_pnl_leaderboard_bubble_chart(chain: str, token_address: str):
             template='plotly_white'
         )
 
-        st.plotly_chart(fig, use_container_width=True)
+        st.plotly_chart(fig, width='stretch')
 
     else:
         DATE_FROM = (dt.today() - pd.Timedelta(days=7)).strftime('%Y-%m-%d')  # one week ago
@@ -103,6 +103,35 @@ def render_pnl_leaderboard_bubble_chart(chain: str, token_address: str):
             if df.empty:
                 st.warning("No PnL data returned for the selected filters.")
             else:
+                # Store summarized data for AI summary
+                df_clean = df.dropna(subset=['pnl_usd_realised', 'pnl_usd_unrealised'])
+                if not df_clean.empty:
+                    st.session_state.tgm_pnl_summary = {
+                        "total_traders": len(df_clean),
+                        "summary_stats": {
+                            "avg_realized_pnl": float(df_clean['pnl_usd_realised'].mean()) if 'pnl_usd_realised' in df_clean.columns else 0,
+                            "median_realized_pnl": float(df_clean['pnl_usd_realised'].median()) if 'pnl_usd_realised' in df_clean.columns else 0,
+                            "avg_unrealized_pnl": float(df_clean['pnl_usd_unrealised'].mean()) if 'pnl_usd_unrealised' in df_clean.columns else 0,
+                            "avg_win_rate": float(df_clean['win_rate'].mean()) if 'win_rate' in df_clean.columns else 0,
+                            "total_realized_pnl": float(df_clean['pnl_usd_realised'].sum()) if 'pnl_usd_realised' in df_clean.columns else 0,
+                            "total_unrealized_pnl": float(df_clean['pnl_usd_unrealised'].sum()) if 'pnl_usd_unrealised' in df_clean.columns else 0,
+                        },
+                        "top_5_profitable": df_clean.nlargest(5, 'pnl_usd_realised')[
+                            ['trader_address_label', 'pnl_usd_realised', 'pnl_usd_unrealised', 'win_rate', 'holding_usd']
+                        ].to_dict('records') if len(df_clean) >= 5 else df_clean[
+                            ['trader_address_label', 'pnl_usd_realised', 'pnl_usd_unrealised', 'win_rate', 'holding_usd']
+                        ].to_dict('records'),
+                        "top_5_unrealized": df_clean.nlargest(5, 'pnl_usd_unrealised')[
+                            ['trader_address_label', 'pnl_usd_realised', 'pnl_usd_unrealised', 'win_rate']
+                        ].to_dict('records') if len(df_clean) >= 5 else df_clean[
+                            ['trader_address_label', 'pnl_usd_realised', 'pnl_usd_unrealised', 'win_rate']
+                        ].to_dict('records'),
+                        "distribution": {
+                            "profitable_count": int((df_clean['pnl_usd_realised'] > 0).sum()) if 'pnl_usd_realised' in df_clean.columns else 0,
+                            "unrealized_profitable_count": int((df_clean['pnl_usd_unrealised'] > 0).sum()) if 'pnl_usd_unrealised' in df_clean.columns else 0,
+                        }
+                    }
+                
                 col1, col2, col3 = st.columns([3, 2, 1])
                 df_display = df.dropna(subset=['pnl_usd_realised', 'pnl_usd_unrealised', 'trader_address_label'])
                 
@@ -119,7 +148,7 @@ def render_pnl_leaderboard_bubble_chart(chain: str, token_address: str):
                     
                 with col3:
                     st.markdown("<br>", unsafe_allow_html=True)
-                    if st.button("Go to Profile", use_container_width=True):
+                    if st.button("Go to Profile", width='stretch'):
                         wallet_row = df_display[df_display['trader_address_label'] == selected_label].iloc[0]
                         st.session_state["wallet"] = wallet_row['trader_address']
                         st.session_state["label"] = wallet_row['trader_address_label']
@@ -144,7 +173,7 @@ def render_pnl_leaderboard_bubble_chart(chain: str, token_address: str):
                     legend_title='Holder Type',
                     template='plotly_white'
                 )
-                st.plotly_chart(fig, use_container_width=True)
+                st.plotly_chart(fig, width='stretch')
 
         except Exception as e:
             st.error(f"Unexpected error: {e}" )

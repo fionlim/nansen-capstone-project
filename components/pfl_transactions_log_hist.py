@@ -74,7 +74,7 @@ def render_transactions_log_hist(client: NansenClient, address: str, chain_tx: s
             kde_vals = (np.exp(-0.5 * diff ** 2).sum(axis=1) / (n * h * np.sqrt(2 * np.pi)))
             fig.add_trace(go.Scatter(x=grid, y=kde_vals, mode="lines", name="KDE", hoverinfo="skip"))
 
-        st.plotly_chart(fig, use_container_width=True)
+        st.plotly_chart(fig, width='stretch')
 
     except Exception as e:
         st.error(f"Failed to load Transaction Size Distribution: {e}")

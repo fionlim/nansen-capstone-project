@@ -126,6 +126,18 @@ def tgm_dex_trades_to_dataframe(items: List[Dict]) -> pd.DataFrame:
 
 # /token-screener (but under tgm)
 def tgm_token_screener_to_dataframe(items: List[Dict]) -> pd.DataFrame:
+
+    def format_currency(x):
+        """Format currency values: >= 1B as B, >= 100K as M, else as regular number"""
+        if pd.isna(x):
+            return "N/A"
+        if abs(x) >= 1_000_000_000:
+            return f"${x/1_000_000_000:.3f}B"
+        elif abs(x) >= 100_000:
+            return f"${x/1_000_000:,.2f}M"
+        else:
+            return f"${x:,.0f}"
+
     if not items:
         return pd.DataFrame(
             columns=[
@@ -175,22 +187,10 @@ def tgm_token_screener_to_dataframe(items: List[Dict]) -> pd.DataFrame:
         )
 
     if "market_cap_usd" in df.columns:
-        df["market_cap_usd"] = df["market_cap_usd"].apply(
-            lambda x: (
-                f"${x/1_000_000:,.2f}M"
-                if pd.notna(x) and x >= 100_000
-                else f"${x:,.0f}" if pd.notna(x) else "N/A"
-            )
-        )
+        df["market_cap_usd"] = df["market_cap_usd"].apply(format_currency)
 
     if "liquidity" in df.columns:
-        df["liquidity"] = df["liquidity"].apply(
-            lambda x: (
-                f"${x/1_000_000:,.2f}M"
-                if pd.notna(x) and x >= 100_000
-                else f"${x:,.0f}" if pd.notna(x) else "N/A"
-            )
-        )
+        df["liquidity"] = df["liquidity"].apply(format_currency)
 
     if "price_usd" in df.columns:
         df["price_usd"] = df["price_usd"].apply(
@@ -203,48 +203,23 @@ def tgm_token_screener_to_dataframe(items: List[Dict]) -> pd.DataFrame:
         )
 
     if "fdv" in df.columns:
-        df["fdv"] = df["fdv"].apply(
-            lambda x: (
-                f"${x/1_000_000:,.2f}M"
-                if pd.notna(x) and x >= 100_000
-                else f"${x:,.0f}" if pd.notna(x) else "N/A"
-            )
-        )
+        df["fdv"] = df["fdv"].apply(format_currency)
 
     if "volume" in df.columns:
-        df["volume"] = df["volume"].apply(
-            lambda x: (
-                f"${x/1_000_000:,.2f}M"
-                if pd.notna(x) and x >= 100_000
-                else f"${x:,.0f}" if pd.notna(x) else "N/A"
-            )
-        )
+        df["volume"] = df["volume"].apply(format_currency)
 
     if "netflow" in df.columns:
-        df["netflow"] = df["netflow"].apply(
-            lambda x: (
-                f"${x/1_000_000:,.2f}M"
-                if pd.notna(x) and abs(x) >= 100_000
-                else f"${x:,.0f}" if pd.notna(x) else "N/A"
-            )
-        )
+        df["netflow"] = df["netflow"].apply(format_currency)
 
     if "buy_volume" in df.columns:
-        df["buy_volume"] = df["buy_volume"].apply(
-            lambda x: (
-                f"${x/1_000_000:,.2f}M"
-                if pd.notna(x) and x >= 100_000
-                else f"${x:,.0f}" if pd.notna(x) else "N/A"
-            )
-        )
+        df["buy_volume"] = df["buy_volume"].apply(format_currency)
 
     if "sell_volume" in df.columns:
-        df["sell_volume"] = df["sell_volume"].apply(
-            lambda x: (
-                f"${x/1_000_000:,.2f}M"
-                if pd.notna(x) and x >= 100_000
-                else f"${x:,.0f}" if pd.notna(x) else "N/A"
-            )
+        df["sell_volume"] = df["sell_volume"].apply(format_currency)
+
+    if "fdv_mc_ratio" in df.columns:
+        df["fdv_mc_ratio"] = df["fdv_mc_ratio"].apply(
+            lambda x: f"{x:.2f}" if pd.notna(x) else "N/A"
         )
 
     if "inflow_fdv_ratio" in df.columns:

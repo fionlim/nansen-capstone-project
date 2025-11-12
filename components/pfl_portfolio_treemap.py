@@ -42,7 +42,7 @@ def _treemap_fragment(df: pd.DataFrame, *, fragment_key: str = "pfl_portfolio_tr
         )
     with col3:
         st.markdown("<br>", unsafe_allow_html=True)
-        if st.button("Get Metrics", use_container_width=True):
+        if st.button("Get Metrics", width='stretch'):
             selected_token_symbol = selected_token_display.split(" (")[0]
             selected_chain = selected_token_display.split(" (")[1].replace(")", "")
             token_row = df[
@@ -109,7 +109,7 @@ def _treemap_fragment(df: pd.DataFrame, *, fragment_key: str = "pfl_portfolio_tr
                           "Portfolio: %{customdata[0]:.2f}%<extra></extra>",
         )
         fig.update_layout(margin=dict(t=30, l=10, r=10, b=10))
-        st.plotly_chart(fig, use_container_width=True)
+        st.plotly_chart(fig, width='stretch')
     else:
         majors_symbols = set(majors["token_symbol"])
         tree_df = df[df["token_symbol"].isin(majors_symbols)].copy()
@@ -135,7 +135,7 @@ def _treemap_fragment(df: pd.DataFrame, *, fragment_key: str = "pfl_portfolio_tr
                           "Of portfolio: %{percentRoot:.1%}<extra></extra>",
         )
         fig2.update_layout(margin=dict(t=30, l=10, r=10, b=10))
-        st.plotly_chart(fig2, use_container_width=True)
+        st.plotly_chart(fig2, width='stretch')
 
 def render_portfolio_treemap(
     client: NansenClient,
