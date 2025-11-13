@@ -3,7 +3,7 @@ from typing import Dict, List, Tuple
 import pandas as pd
 from datetime import datetime, timezone, timedelta
 from nansen_client import NansenClient
-from dataframes import pfl_transactions_to_dataframe, tgm_token_screener_to_dataframe
+from dataframes import pfl_transactions_to_dataframe, tgm_token_screener_to_dataframe, format_small_price
 
 @st.cache_data(ttl=300)
 def fetch_transactions(_client, wallet, from_iso, to_iso):
@@ -203,7 +203,7 @@ def render_wallet_token_tracker(wallets: List):
                         ">
                         <h3 style="margin:0 0 6px 0;">{token_symbol} ({chain})</h3>
                         <div style="font-size:0.95rem; color:#EEE;">
-                            💲 <b>Price:</b> ${token_price:,.6f} &nbsp; 
+                            💲 <b>Price:</b> {format_small_price(token_price)} &nbsp; 
                             🏦 <b>Market Cap:</b> {market_cap} &nbsp; 
                             📈 <b>Vol (24h):</b> {volume_24h}
                         </div>

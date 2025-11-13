@@ -2,6 +2,71 @@ from typing import List, Dict
 import pandas as pd
 
 
+# ---------- Helper Functions ----------
+
+def format_small_price(price: float) -> str:
+    """
+    Format small prices with subscript notation for leading zeros using Unicode subscripts.
+    Works for both HTML and Streamlit contexts.
+    Example: 0.0000003128 -> $0.0₆3128 where ₆ is Unicode subscript
+    Example: 0.0003128 -> $0.0₃3128 where ₃ is Unicode subscript
+    """
+    if pd.isna(price) or price == 0:
+        return "N/A"
+    
+    # Only apply subscript format for prices < 0.01 (i.e., with 2+ leading zeros after 0.0)
+    if abs(price) >= 0.01:
+        return f"${price:.6f}"
+    
+    # Use scientific notation to extract significant digits more accurately
+    price_abs = abs(price)
+    price_str = f"{price_abs:.15g}"  # Use 'g' format to avoid trailing zeros
+    
+    # Unicode subscript mapping for digits 0-9
+    subscripts = str.maketrans("0123456789", "₀₁₂₃₄₅₆₇₈₉")
+    
+    # If it's in scientific notation, convert it
+    if 'e' in price_str.lower():
+        # Parse scientific notation
+        parts = price_str.lower().split('e')
+        mantissa = float(parts[0])
+        exponent = int(parts[1])
+        
+        # Reconstruct as decimal string
+        if exponent < 0:
+            # Number is < 1
+            leading_zeros = abs(exponent) - 1  # -1 because first digit is after "0."
+            # Get significant digits from mantissa (remove decimal point and trailing zeros)
+            mantissa_str = f"{mantissa:.15g}".replace('.', '').lstrip('0').rstrip('0')
+            significant_digits = mantissa_str[:8]  # Limit to 8 digits
+            
+            if leading_zeros >= 2:
+                sign = "-" if price < 0 else ""
+                subscript_num = str(leading_zeros).translate(subscripts)
+                return f"{sign}$0.0{subscript_num}{significant_digits}"
+    
+    # Fallback: parse as regular decimal
+    if '.' in price_str:
+        decimal_part = price_str.split('.')[1]
+        leading_zeros = 0
+        for char in decimal_part:
+            if char == '0':
+                leading_zeros += 1
+            else:
+                break
+        
+        if leading_zeros >= 2:
+            significant_digits = decimal_part[leading_zeros:].rstrip('0')
+            if len(significant_digits) > 8:
+                significant_digits = significant_digits[:8]
+            sign = "-" if price < 0 else ""
+            subscript_num = str(leading_zeros).translate(subscripts)
+            return f"{sign}$0.0{subscript_num}{significant_digits}"
+    
+    # Fallback to regular formatting
+    return f"${price:.6f}"
+
+
 # ---------- Smart Money ----------
 
 # smart-money/netflow
@@ -193,9 +258,7 @@ def tgm_token_screener_to_dataframe(items: List[Dict]) -> pd.DataFrame:
         df["liquidity"] = df["liquidity"].apply(format_currency)
 
     if "price_usd" in df.columns:
-        df["price_usd"] = df["price_usd"].apply(
-            lambda x: f"${x:.6f}" if pd.notna(x) else "N/A"
-        )
+        df["price_usd"] = df["price_usd"].apply(format_small_price)
 
     if "price_change" in df.columns:
         df["price_change"] = df["price_change"].apply(
