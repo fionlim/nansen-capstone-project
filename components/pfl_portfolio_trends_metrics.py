@@ -57,6 +57,6 @@ def render_portfolio_trends_metrics(client, wallet, chain, from_iso, to_iso):
     # Display metrics in two columns
     col1, col2 = st.columns(2)
     with col1:
-        st.metric(label="Top Token Concentration %", value=f"{top_token_concentration:.2f}%")
+        st.metric(label="Top Token Concentration %", value=f"{top_token_concentration:.2f}%", help="The percentage of the portfolio's total USD value that is held in the single largest token position.")
     with col2:
-        st.metric(label="30D Portfolio Growth %", value=f"{portfolio_growth_30d:.2f}%")
+        st.metric(label="30D Portfolio Growth %", value=f"{portfolio_growth_30d:.2f}%", help="The percentage growth of the portfolio's total USD value over the past 30 days.")
