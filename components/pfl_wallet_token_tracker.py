@@ -4,6 +4,59 @@ import pandas as pd
 from datetime import datetime, timezone, timedelta
 from nansen_client import NansenClient
 from dataframes import pfl_transactions_to_dataframe, tgm_token_screener_to_dataframe, format_small_price
+import re
+
+
+def parse_formatted_price(price_str: str) -> float:
+    """
+    Convert formatted price string (with Unicode subscripts) back to float.
+    Handles formats like:
+    - $0.0₆3128 -> 0.0000003128
+    - $0.0₃3128 -> 0.0003128
+    - $0.123456 -> 0.123456
+    - N/A -> 0.0
+    """
+    if not price_str or price_str == "N/A":
+        return 0.0
+    
+    # Remove $ and commas
+    price_str = price_str.replace("$", "").replace(",", "").strip()
+    
+    if not price_str:
+        return 0.0
+    
+    # Check if it contains Unicode subscript notation (format: 0.0₆3128)
+    # Unicode subscripts: ₀₁₂₃₄₅₆₇₈₉
+    subscript_to_digit = str.maketrans("₀₁₂₃₄₅₆₇₈₉", "0123456789")
+    
+    # Pattern to match: 0.0 followed by a subscript digit followed by significant digits
+    pattern = r'^([-+]?)0\.0([₀₁₂₃₄₅₆₇₈₉])(\d+)$'
+    match = re.match(pattern, price_str)
+    
+    if match:
+        sign = match.group(1)  # Could be "-" or ""
+        subscript_char = match.group(2)
+        significant_digits = match.group(3)
+        
+        # Convert subscript to regular digit
+        leading_zeros = int(subscript_char.translate(subscript_to_digit))
+        
+        # Reconstruct the number: 0.0 + (leading_zeros zeros) + significant_digits
+        # Example: 0.0₆3128 -> 0.0000003128
+        decimal_str = f"0.{'0' * leading_zeros}{significant_digits}"
+        result = float(decimal_str)
+        
+        # Apply sign if negative
+        if sign == "-":
+            result = -result
+        
+        return result
+    
+    # If no subscript notation, try parsing as regular float
+    try:
+        return float(price_str)
+    except (ValueError, TypeError):
+        return 0.0
 
 @st.cache_data(ttl=300)
 def fetch_transactions(_client, wallet, from_iso, to_iso):
@@ -141,8 +194,8 @@ def render_wallet_token_tracker(wallets: List):
                 
                 token_row = token_df.iloc[0]
                 token_symbol = token_row.get("token_symbol", "Unknown")
-                token_price_str = token_row.get("price_usd", "0").replace("$", "").replace(",", "")
-                token_price = float(token_price_str) if token_price_str else 0.0
+                token_price_str = token_row.get("price_usd", "0")
+                token_price = parse_formatted_price(token_price_str)
                 market_cap = token_row.get("market_cap_usd", "N/A")
                 volume_24h = token_row.get("volume", "N/A")
 
