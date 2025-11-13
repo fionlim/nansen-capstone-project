@@ -181,10 +181,37 @@ def run_chat():
     mcp_client: NansenMCPClient = st.session_state.mcp_client
     openai_client: OpenAI = st.session_state.openai_client
 
+    # Show sample prompts if chat is empty
+    if not st.session_state.chat_messages:
+        st.markdown("### 💡 Sample prompts to get started:")
+        
+        sample_prompts = [
+            "What are the smart money wallets buying on Ethereum in the past 24h?",
+            "What are the top tokens by market cap on Solana?",
+            "Show me my Hyperliquid balances and positions",
+            "Can I trade PENGU on Hyperliquid?",
+        ]
+        
+        # Display as columns with buttons
+        cols = st.columns(2)
+        for idx, prompt in enumerate(sample_prompts):
+            col = cols[idx % 2]
+            with col:
+                if st.button(f"{prompt}", key=f"sample_{idx}", use_container_width=True):
+                    st.session_state.chat_messages.append({"role": "user", "content": prompt})
+                    st.rerun()
+
     # Display chat messages
     for message in st.session_state.chat_messages:
         with st.chat_message(message["role"]):
             st.markdown(message["content"])
+
+    # Check if there's a pending user message that needs processing
+    # (e.g., from a button click)
+    needs_processing = (
+        st.session_state.chat_messages and 
+        st.session_state.chat_messages[-1]["role"] == "user"
+    )
 
     # Chat input
     if prompt := st.chat_input("Ask about blockchain data..."):
@@ -192,7 +219,10 @@ def run_chat():
         st.session_state.chat_messages.append({"role": "user", "content": prompt})
         with st.chat_message("user"):
             st.markdown(prompt)
+        needs_processing = True
 
+    # Process pending message (from either chat input or button click)
+    if needs_processing:
         # Get assistant response
         with st.chat_message("assistant"):
             with st.spinner("Thinking..."):
