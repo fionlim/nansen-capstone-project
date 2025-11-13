@@ -16,7 +16,7 @@ def fetch_tgm_dex_trades(chain, token_address):
     payload = {
         "chain": chain,
         "token_address": token_address,
-        "only_smart_money": False,
+        "only_smart_money": True,
         "date": {
             "from": DATE_FROM,
             "to": DATE_TO
@@ -24,19 +24,6 @@ def fetch_tgm_dex_trades(chain, token_address):
         "pagination": {
             "page": 1,
             "per_page": 100
-        },
-        "filters": {
-            "action": "BUY",
-            "estimated_value_usd": {
-                "min": 1000
-            },
-            "include_smart_money_labels": [
-                "Whale",
-                "Smart Trader"
-            ],
-            "token_amount": {
-                "min": 100
-            }
         },
         "order_by": [
             {

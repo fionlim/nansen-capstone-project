@@ -111,10 +111,10 @@ with col1:
 render_holders_donut_chart(st.session_state.chain, st.session_state.token, st.session_state.aggregate_by_entity)
 render_holder_flows_horizontal_bar_chart(st.session_state.chain, st.session_state.token, st.session_state.aggregate_by_entity)
 
-st.subheader('Holder PnL Bubble Chart')
+st.subheader('Holder PnL Bubble Chart', help = "PnL for past one week with following conditions: holding amount ≥ 1000 and realised PnL ≥ 1000")
 render_pnl_leaderboard_bubble_chart(st.session_state.chain, st.session_state.token)
 
-st.subheader('DEX Trades Hourly Overview')
+st.subheader(body = 'DEX Trades Hourly Overview', help="Shows both buy and sell trades by Smart Money labelled wallets only.")
 render_dex_trades_hourly(st.session_state.chain, st.session_state.token)
 
 # --- Bottom layout: LlamaSwap Widget ---
