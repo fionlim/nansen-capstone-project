@@ -10,7 +10,7 @@ from components.llamaswap_iframe import render_llamaswap_iframe
 from components.tgm_dashboard_summary import render_dashboard_summary
 
 st.set_page_config(page_title="TGM Dashboard", layout="wide")
-st.title("TGM Dashboard")
+st.title("Token Dashboard")
 
 # Handle authentication
 if not st.user.is_logged_in:

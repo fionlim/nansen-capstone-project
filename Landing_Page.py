@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 import json
 import streamlit as st
 from streamlit_javascript import st_javascript
@@ -23,14 +22,11 @@ def main():
     st.sidebar.success("Check out our dashboards above!")
 
     # User is logged in - show logout button and user info
-    col1, col2 = st.columns([3, 1])
-    with col1:
-        st.title("Nansen.ai Sample Project")
-    with col2:
-        if st.button("Log out"):
-            st.logout()
+    st.title("Nansen API Sample Project")
     
     st.write(f"Hello, {st.user.name}!")
+    if st.button("Log out"):
+        st.logout()
 
     st.header("What are Smart Money Buying?")
 

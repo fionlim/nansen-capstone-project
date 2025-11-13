@@ -32,7 +32,7 @@ def iso_from_date(d, end_of_day=False):
     return dt.isoformat().replace("+00:00", "Z")
 
 st.set_page_config(page_title="Profiler Dashboard", layout="wide")
-st.title("Nansen.ai Profiler API Dashboard")
+st.title("Wallet Profiler Dashboard")
 
 # Handle authentication
 if not st.user.is_logged_in:
