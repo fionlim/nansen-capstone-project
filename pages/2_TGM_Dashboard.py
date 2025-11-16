@@ -52,9 +52,7 @@ if url_token:
     st.session_state.token = token_normalized
     st.info(f"📎 Loaded from URL: Token {st.session_state.token[:10]}... on {st.session_state.chain}")
 elif st.session_state.get("selected_token", ""):
-    # Fallback to landing page prefilled token
     prefilled_token = st.session_state.get("selected_token", "")
-    # Only lowercase token if chain is not solana
     token_normalized = prefilled_token.strip()
     if st.session_state.chain != "solana":
         token_normalized = token_normalized.lower()
@@ -75,17 +73,20 @@ with st.form(key='input_form'):
             st.info("👆 Enter a token address above to see detailed metrics")
     with c2:
         available_chains = ["ethereum", "solana", "arbitrum", "optimism", "base", "bnb", "polygon"]
-        chain = st.selectbox("Chain", available_chains, key="chain")
-        # Only lowercase token if chain is not solana
-        token_normalized = token.strip()
+        current_chain = st.session_state.get("chain", "ethereum")
+        chain_index = available_chains.index(current_chain) if current_chain in available_chains else 0
+        chain = st.selectbox("Chain", available_chains, index=chain_index)
+    with c3:
+        period = st.selectbox("Period", ["24h", "7d", "30d"], key="period")
+    with c4:
+        st.markdown("<br>", unsafe_allow_html=True)
+        submited = st.form_submit_button("🔄 Update Dashboard", width='stretch')
+    if submited:
+        st.session_state.chain = chain
+        token_normalized = token.strip() # lowercase token if chain is not solana
         if chain != "solana":
             token_normalized = token_normalized.lower()
         st.session_state.token = token_normalized
-    with c3:
-        period = st.selectbox("Period", ["1h", "24h", "7d", "30d"], key="period")
-    with c4:
-        st.markdown("<br>", unsafe_allow_html=True)
-        submit = st.form_submit_button("🔄 Update Dashboard", width='stretch')
 
 # Placeholder for summary at the top (filled after all components run)
 summary_placeholder = st.empty()
@@ -111,10 +112,10 @@ with col1:
 render_holders_donut_chart(st.session_state.chain, st.session_state.token, st.session_state.aggregate_by_entity)
 render_holder_flows_horizontal_bar_chart(st.session_state.chain, st.session_state.token, st.session_state.aggregate_by_entity)
 
-st.subheader('Holder PnL Bubble Chart', help = "PnL for past one week with following conditions: holding amount ≥ 1000 and realised PnL ≥ 1000")
+st.subheader('Holder Trailing 7d PnL Bubble Chart', help = "Top 100 holders holding ≥ US$1000 and a rPnL ≥ US$1000")
 render_pnl_leaderboard_bubble_chart(st.session_state.chain, st.session_state.token)
 
-st.subheader(body = 'DEX Trades Hourly Overview', help="Shows both buy and sell trades by Smart Money labelled wallets only.")
+st.subheader(body = 'Smart Money DEX Trades Hourly Breakdown', help="Shows both buy and sell trades by Smart Money labelled wallets only in the last 24 hours.")
 render_dex_trades_hourly(st.session_state.chain, st.session_state.token)
 
 # --- Bottom layout: LlamaSwap Widget ---

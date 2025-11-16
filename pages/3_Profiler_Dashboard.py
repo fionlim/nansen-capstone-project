@@ -19,8 +19,8 @@ from components.pfl_transactions_log_hist import render_transactions_log_hist
 from components.pfl_portfolio_trends_metrics import render_portfolio_trends_metrics
 
 
-CHAINS = ["all","ethereum","arbitrum","avalanche","base", "berachain", "blast", "bnb","goat", "hyperevm", "iotaevm", "linea", "mantle", "optimism","polygon","ronin", "sei", "scroll", "sonic", "unichain", "zksync", "solana", "bitcoin", "starknet", "ton", "tron"]
-TX_CHAINS = ["ethereum","arbitrum","avalanche","base", "berachain", "blast", "bnb","goat", "hyperevm", "iotaevm", "linea", "mantle", "optimism","polygon","ronin", "sei", "scroll", "sonic", "unichain", "zksync", "solana", "bitcoin", "starknet", "ton", "tron"]
+CHAINS = ["all", "ethereum", "solana", "arbitrum", "optimism", "base", "bnb", "polygon"]
+TX_CHAINS = ["all", "ethereum", "solana", "arbitrum", "optimism", "base", "bnb", "polygon"]
 
 def iso_from_date(d, end_of_day=False):
     if isinstance(d, datetime):
@@ -47,10 +47,14 @@ if 'wallet' not in st.session_state:
     st.session_state.wallet = '0xb284f19ffa703daadf6745d3c655f309d17370a5'
 if 'label' not in st.session_state:
     st.session_state.label = ''
-if 'port_pnl_chains' not in st.session_state:
-    st.session_state.port_pnl_chains = 'all'
-if 'tx_related_chains' not in st.session_state:
-    st.session_state.tx_related_chains = 'ethereum'
+if 'chain' in st.session_state and st.session_state.chain: # init port_pnl_chains and tx_related_chains from chain if available
+    st.session_state.port_pnl_chains = st.session_state.chain
+    st.session_state.tx_related_chains = st.session_state.chain
+else:
+    if 'port_pnl_chains' not in st.session_state: # init port_pnl_chains to 'all' if not set
+        st.session_state.port_pnl_chains = 'all'
+    if 'tx_related_chains' not in st.session_state:
+        st.session_state.tx_related_chains = 'all'
 if 'starred_wallets' not in st.session_state:
     starred_wallets = st_javascript("JSON.parse(localStorage.getItem('starred_wallets') || '[]');")
     if not isinstance(starred_wallets, list):
@@ -82,11 +86,12 @@ with st.form(key='input_form'):
         )
         st.session_state.label = label.strip()
     with c3:
-        st.selectbox("Portfolio/PNL Chains", CHAINS, index=CHAINS.index(st.session_state.port_pnl_chains) if st.session_state.port_pnl_chains in CHAINS else 0, key="port_pnl_chains")
+        port_pnl_chains = st.selectbox("Portfolio/PNL Chains", CHAINS, index=CHAINS.index(st.session_state.port_pnl_chains) if st.session_state.port_pnl_chains in CHAINS else 0)
+        st.session_state.port_pnl_chains = port_pnl_chains
     with c4:
-        st.selectbox("TX/Related Chain", TX_CHAINS, index=TX_CHAINS.index(st.session_state.tx_related_chains) if st.session_state.tx_related_chains in TX_CHAINS else 0, key="tx_related_chains")
-    
-
+        tx_related_chains = st.selectbox("TX/Related Chain", TX_CHAINS, index=TX_CHAINS.index(st.session_state.tx_related_chains) if st.session_state.tx_related_chains in TX_CHAINS else 0)
+        st.session_state.tx_related_chains = tx_related_chains
+        
     submitted = st.form_submit_button("🔄 Update Dashboard", use_container_width=True)
     if submitted:
         st.session_state.form_submitted = True
