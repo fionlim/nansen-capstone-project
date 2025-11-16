@@ -1,12 +1,11 @@
-import copy
-from datetime import datetime, timedelta, timezone
+from datetime import datetime as dt, timedelta
 from nansen_client import NansenClient
 from dataframes import tgm_dex_trades_to_dataframe
 import streamlit as st
 import plotly.graph_objects as go
 
 @st.cache_data(ttl=300)
-def fetch_trades(chain, token_address, from_datetime, to_datetime, only_smart_money):
+def fetch_trades(chain, token_address, from_date, to_date, only_smart_money):
     # Initialize client
     client = NansenClient()
                     
@@ -15,7 +14,7 @@ def fetch_trades(chain, token_address, from_datetime, to_datetime, only_smart_mo
         "chain": chain,
         "token_address": token_address,
         "only_smart_money": only_smart_money,
-        "date": {"from": from_datetime, "to": to_datetime},
+        "date": {"from": from_date, "to": to_date},
         "pagination": {"page": 1, "per_page": 1000},
         "order_by": [{"field": "block_timestamp", "direction": "ASC"}],
     }
@@ -53,7 +52,6 @@ def render_gauge_charts(token_address: str, chain: str, period: str):
             with st.spinner("Fetching Smart Money data..."):
                 # Period validation
                 period_mapping = {
-                    "1h": timedelta(hours=1),
                     "24h": timedelta(hours=24),
                     "7d": timedelta(days=7),
                     "30d": timedelta(days=30),
@@ -64,13 +62,12 @@ def render_gauge_charts(token_address: str, chain: str, period: str):
                     st.error(f"❌ Invalid period: {period}. Must be one of: {valid_periods}")
                 else:
                     # Calculate date range
-                    now = datetime.now(timezone.utc)
-                    to_datetime = now.strftime("%Y-%m-%dT%H:%M:%SZ")
-                    from_datetime = (now - period_mapping[period]).strftime("%Y-%m-%dT%H:%M:%SZ")
+                    to_date = dt.today().strftime('%Y-%m-%d')
+                    from_date = (dt.today() - period_mapping[period]).strftime('%Y-%m-%d')
                     
                     # Convert to dataframes
-                    df_all = fetch_trades(chain, token_address, from_datetime, to_datetime, False)
-                    df_smart = fetch_trades(chain, token_address, from_datetime, to_datetime, True)
+                    df_all = fetch_trades(chain, token_address, from_date, to_date, False)
+                    df_smart = fetch_trades(chain, token_address, from_date, to_date, True)
                     
                     # Calculate metrics
                     total_trades = len(df_all)

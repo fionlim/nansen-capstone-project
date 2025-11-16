@@ -1,4 +1,3 @@
-from typing import Dict
 import streamlit as st
 import pandas as pd
 from datetime import datetime as dt
@@ -80,7 +79,7 @@ def render_dex_trades_hourly(chain: str, token_address: str):
         try:
             df = fetch_tgm_dex_trades(chain, token_address)
             if df.empty:
-                st.warning("No DEX trades data returned for the selected filters.")
+                st.warning("No DEX trades made by Smart Money labelled wallets in the last 24 hours.")
             else:
                 # Filter for transactions in the last 24 hours
                 latest_time = df['block_timestamp'].max()
